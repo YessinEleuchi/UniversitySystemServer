@@ -113,12 +113,7 @@ public class SessionService {
         return sessionRepository.findByClassGroupId(classGroupId);
     }
 
-    /**
-     * Planning d'un étudiant (via toutes ses inscriptions).
-     */
-    public List<Session> getSessionsForStudent(String studentId) {
-        return sessionRepository.findByStudentId(studentId);
-    }
+
 
     // ========================================================================
     // MÉTHODES PRIVÉES DE VÉRIFICATION DE CONFLITS

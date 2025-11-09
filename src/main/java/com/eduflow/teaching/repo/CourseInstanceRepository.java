@@ -51,6 +51,7 @@ public interface CourseInstanceRepository extends MongoRepository<CourseInstance
      * Tous les cours d'une matière dans une classe (historique ou suivi).
      */
     List<CourseInstance> findByClassGroupIdAndSubjectId(String classGroupId, String subjectId);
+    Long countByTeacherId(String teacherId);
 
     /**
      * Cours d'une classe dans un semestre précis (semestre S1 ou S2).
