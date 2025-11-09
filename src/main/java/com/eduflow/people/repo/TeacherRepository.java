@@ -8,10 +8,15 @@ import java.util.List;
 
 public interface TeacherRepository extends MongoRepository<Teacher, String> {
 
-    Optional<Teacher> findByCode(String code);
+    Optional<Teacher> findByCodeIgnoreCase(String code);
 
-    Optional<Teacher> findByEmail(String email);
+    Optional<Teacher> findByEmailIgnoreCase(String email);
 
-    // si tu veux lister par département
-    List<Teacher> findByDepartment(String department);
+    List<Teacher> findByDepartmentOrderByLastNameAscFirstNameAsc(String department);
+
+    List<Teacher> findTop10ByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName);
+
+    List<Teacher> findByActiveTrueOrderByLastNameAsc();
+
+    long countByDepartment(String department);
 }
