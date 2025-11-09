@@ -24,6 +24,7 @@ public class Teacher {
 
     @Indexed(unique = true, sparse = true)
     private String email;
+    private String phone;
 
     private String department; // Informatique, Réseaux, Génie électrique...
 }
