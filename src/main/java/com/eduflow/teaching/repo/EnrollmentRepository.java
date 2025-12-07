@@ -35,11 +35,7 @@ public interface EnrollmentRepository extends MongoRepository<Enrollment, String
 
     void deleteByStudentId(String studentId); // désinscription totale
 
-    // ========================================================================
-    // 4. PAR ANNÉE ACADÉMIQUE (recommandé : ajouter academicYear dans Enrollment)
-    // ========================================================================
 
-    // Option 1 : si tu ajoutes academicYear dans Enrollment (MEILLEUR POUR PERF)
     List<Enrollment> findByAcademicYear(Integer academicYear);
 
     // Option 2 : si tu ne veux pas modifier le modèle → jointure manuelle

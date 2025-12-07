@@ -117,8 +117,8 @@ public class TeacherService {
     /**
      * Tous les enseignants actifs (pour dropdown).
      */
-    public List<Teacher> getAllActiveTeachers() {
-        return teacherRepository.findByActiveTrueOrderByLastNameAsc();
+    public List<Teacher> getAllTeachers() {
+        return teacherRepository.findByOrderByLastNameAsc();
     }
 
     // ========================================================================

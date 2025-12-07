@@ -16,7 +16,7 @@ public interface TeacherRepository extends MongoRepository<Teacher, String> {
 
     List<Teacher> findTop10ByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName);
 
-    List<Teacher> findByActiveTrueOrderByLastNameAsc();
+    List<Teacher> findByOrderByLastNameAsc();
 
     long countByDepartment(String department);
 }

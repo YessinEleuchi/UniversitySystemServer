@@ -31,4 +31,5 @@ public class Enrollment {
     private String courseInstanceId; // ref -> teaching.courseInstance
 
     private Instant enrolledAt;
+    private Integer academicYear;
 }
