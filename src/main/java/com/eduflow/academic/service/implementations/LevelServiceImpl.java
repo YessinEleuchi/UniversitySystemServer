@@ -1,4 +1,4 @@
-package com.eduflow.academic.service.Implementations;
+package com.eduflow.academic.service.implementations;
 import com.eduflow.academic.domain.Level;
 import com.eduflow.academic.repo.LevelRepository;
 import com.eduflow.academic.repo.SemesterRepository;
