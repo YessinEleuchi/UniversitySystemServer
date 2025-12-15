@@ -3,8 +3,8 @@ package com.eduflow.people.repo;
 import com.eduflow.people.domain.Teacher;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 public interface TeacherRepository extends MongoRepository<Teacher, String> {
 
@@ -14,9 +14,11 @@ public interface TeacherRepository extends MongoRepository<Teacher, String> {
 
     List<Teacher> findByDepartmentOrderByLastNameAscFirstNameAsc(String department);
 
-    List<Teacher> findTop10ByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(String lastName, String firstName);
+    List<Teacher> findTop10ByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(
+            String lastName, String firstName
+    );
 
-    List<Teacher> findByOrderByLastNameAsc();
+    List<Teacher> findByOrderByLastNameAscFirstNameAsc();
 
     long countByDepartment(String department);
 }

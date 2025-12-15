@@ -1,6 +1,12 @@
-/**package com.eduflow.people.service;
+package com.eduflow.people.service;
 
+import com.eduflow.people.domain.PersonType;
+import com.eduflow.people.domain.Role;
+import com.eduflow.people.domain.Student;
+import com.eduflow.people.domain.Teacher;
 import com.eduflow.people.domain.UserAccount;
+import com.eduflow.people.repo.StudentRepository;
+import com.eduflow.people.repo.TeacherRepository;
 import com.eduflow.people.repo.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,154 +16,163 @@ import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-/**
- * Service de gestion des comptes utilisateurs (authentification Spring Security).
- * <p>
- * Un UserAccount est lié à une personne physique :
- * - personType: STUDENT | TEACHER | ADMIN | PARENT | STAFF
- * - personId: ID Mongo de l'étudiant/prof/...
- * <p>
- * Règles métier :
- * - Username unique (email ou matricule)
- * - Mot de passe hashé avec BCrypt
- * - Roles: ROLE_STUDENT, ROLE_TEACHER, ROLE_ADMIN...
- * - Compte activé par défaut, peut être verrouillé
- * </p>
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserAccountService {
 
-    private final UserAccountRepository userAccountRepository;
+    private final UserAccountRepository userRepo;
+    private final StudentRepository studentRepo;
+    private final TeacherRepository teacherRepo;
     private final PasswordEncoder passwordEncoder;
 
-    private static final Set<String> VALID_ROLES = Set.of(
-            "ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN", "ROLE_PARENT", "ROLE_STAFF"
-    );
+    // -------------------------
+    // CREATE ACCOUNTS
+    // -------------------------
 
-    private static final Set<String> VALID_PERSON_TYPES = Set.of(
-            "STUDENT", "TEACHER", "ADMIN", "PARENT", "STAFF"
-    );
+    public UserAccount createManagerAccount(String username, String rawPassword, Set<Role> roles) {
+        if (roles == null || roles.isEmpty())
+            throw new IllegalArgumentException("At least one role is required");
+        if (!(roles.contains(Role.ROLE_MANAGER) || roles.contains(Role.ROLE_SUPER_ADMIN)))
+            throw new IllegalArgumentException("Manager account must have ROLE_MANAGER or ROLE_SUPER_ADMIN");
 
-    /**
-     * Crée un compte utilisateur (inscription ou admin).
+        return createBase(username, rawPassword, roles, null, null);
+    }
 
-    public UserAccount createUser(String username,
-                                  String rawPassword,
-                                  Set<String> roles,
-                                  String personId,
-                                  String personType) {
+    public UserAccount createStudentAccount(String username, String rawPassword, String studentId) {
+        Student student = studentRepo.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
 
-        validateCreateUserParams(username, rawPassword, roles, personId, personType);
+        UserAccount ua = createBase(username, rawPassword, Set.of(Role.ROLE_STUDENT), student.getId(), PersonType.STUDENT);
 
-        if (userAccountRepository.existsByUsernameIgnoreCase(username)) {
-            throw new IllegalStateException("Nom d'utilisateur déjà utilisé : " + username);
+
+        studentRepo.save(student);
+
+        return ua;
+    }
+
+    public UserAccount createTeacherAccount(String username, String rawPassword, String teacherId) {
+        Teacher teacher = teacherRepo.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Teacher not found: " + teacherId));
+
+        UserAccount ua = createBase(username, rawPassword, Set.of(Role.ROLE_TEACHER), teacher.getId(), PersonType.TEACHER);
+
+
+        teacherRepo.save(teacher);
+
+        return ua;
+    }
+
+    private UserAccount createBase(String username,
+                                   String rawPassword,
+                                   Set<Role> roles,
+                                   String personId,
+                                   PersonType personType) {
+
+        String u = normalizeUsername(username);
+        validatePassword(rawPassword);
+
+        if (userRepo.existsByUsernameIgnoreCase(u)) {
+            throw new IllegalStateException("Username already used: " + u);
         }
 
+        validateRolePersonLink(roles, personId, personType);
+
+        Instant now = Instant.now();
         UserAccount ua = UserAccount.builder()
-                .username(username.toLowerCase().trim())
+                .username(u)
                 .password(passwordEncoder.encode(rawPassword))
-                .roles(roles.stream()
-                        .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r.toUpperCase())
-                        .collect(Collectors.toSet()))
+                .roles(roles)
                 .personId(personId)
-                .personType(personType.toUpperCase())
+                .personType(personType)
                 .enabled(true)
                 .accountNonLocked(true)
-                .createdAt(Instant.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
-        return userAccountRepository.save(ua);
+        return userRepo.save(ua);
     }
 
-    /**
-     * Récupère un compte par username (pour Spring Security UserDetailsService).
+    // -------------------------
+    // READ / UPDATE
+    // -------------------------
 
     public UserAccount getByUsername(String username) {
-        return userAccountRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + username));
+        String u = normalizeUsername(username);
+        return userRepo.findByUsernameIgnoreCase(u)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + u));
     }
-
-    /**
-     * Change le mot de passe (avec ancien mot de passe pour sécurité).
 
     public void changePassword(String username, String oldPassword, String newPassword) {
         UserAccount ua = getByUsername(username);
 
         if (!passwordEncoder.matches(oldPassword, ua.getPassword())) {
-            throw new IllegalStateException("Ancien mot de passe incorrect");
+            throw new IllegalStateException("Old password incorrect");
         }
+
+        validatePassword(newPassword);
 
         ua.setPassword(passwordEncoder.encode(newPassword));
         ua.setUpdatedAt(Instant.now());
-        userAccountRepository.save(ua);
+        userRepo.save(ua);
     }
-
-    /**
-     * Active/désactive un compte (admin).
 
     public UserAccount toggleEnabled(String username, boolean enabled) {
         UserAccount ua = getByUsername(username);
         ua.setEnabled(enabled);
         ua.setUpdatedAt(Instant.now());
-        return userAccountRepository.save(ua);
+        return userRepo.save(ua);
     }
-
-    /**
-     * Verrouille/déverrouille (après trop de tentatives).
 
     public UserAccount toggleLock(String username, boolean locked) {
         UserAccount ua = getByUsername(username);
         ua.setAccountNonLocked(!locked);
-        return userAccountRepository.save(ua);
+        ua.setUpdatedAt(Instant.now());
+        return userRepo.save(ua);
     }
 
-    /**
-     * Trouve le compte lié à une personne (étudiant/prof).
-
-    public UserAccount getByPersonIdAndType(String personId, String personType) {
-        return userAccountRepository.findByPersonIdAndPersonType(personId, personType.toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Aucun compte pour cette personne : " + personType + " " + personId));
+    public UserAccount getByPerson(String personId, PersonType personType) {
+        return userRepo.findByPersonIdAndPersonType(personId, personType)
+                .orElseThrow(() -> new IllegalArgumentException("No account for: " + personType + " " + personId));
     }
 
-    /**
-     * Tous les comptes d'un type (pour admin).
+    // -------------------------
+    // INTERNAL VALIDATION
+    // -------------------------
 
-    public java.util.List<UserAccount> getAllByPersonType(String personType) {
-        return userAccountRepository.findByPersonTypeOrderByUsernameAsc(personType.toUpperCase());
+    private String normalizeUsername(String username) {
+        if (!StringUtils.hasText(username) || username.trim().length() < 3) {
+            throw new IllegalArgumentException("Invalid username");
+        }
+        return username.trim().toLowerCase();
     }
 
-    // ========================================================================
-    // VALIDATION INTERNE
-    // ========================================================================
-    private void validateCreateUserParams(String username, String rawPassword,
-                                          Set<String> roles, String personId, String personType) {
-
-        if (!StringUtils.hasText(username) || username.length() < 3) {
-            throw new IllegalArgumentException("Username invalide (min 3 caractères)");
-        }
-        if (!username.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
-                !username.matches("^[a-zA-Z0-9]{3,20}$")) {
-            throw new IllegalArgumentException("Username doit être un email ou alphanumérique");
-        }
-        if (rawPassword == null || rawPassword.length() < 6) {
-            throw new IllegalArgumentException("Mot de passe trop court (min 6)");
-        }
-        if (roles == null || roles.isEmpty()) {
-            throw new IllegalArgumentException("Au moins un rôle requis");
-        }
-        if (!VALID_ROLES.containsAll(roles)) {
-            throw new IllegalArgumentException("Rôle invalide. Autorisé : " + VALID_ROLES);
-        }
-        if (!StringUtils.hasText(personId)) {
-            throw new IllegalArgumentException("personId obligatoire");
-        }
-        if (!VALID_PERSON_TYPES.contains(personType.toUpperCase())) {
-            throw new IllegalArgumentException("personType invalide : " + personType);
+    private void validatePassword(String rawPassword) {
+        if (!StringUtils.hasText(rawPassword) || rawPassword.length() < 6) {
+            throw new IllegalArgumentException("Password too short (min 6)");
         }
     }
-}*/
+
+    private void validateRolePersonLink(Set<Role> roles, String personId, PersonType personType) {
+        boolean isStudent = roles.contains(Role.ROLE_STUDENT);
+        boolean isTeacher = roles.contains(Role.ROLE_TEACHER);
+
+        if (isStudent) {
+            if (personType != PersonType.STUDENT || !StringUtils.hasText(personId))
+                throw new IllegalArgumentException("STUDENT account must be linked to Student (personId, personType=STUDENT)");
+        }
+
+        if (isTeacher) {
+            if (personType != PersonType.TEACHER || !StringUtils.hasText(personId))
+                throw new IllegalArgumentException("TEACHER account must be linked to Teacher (personId, personType=TEACHER)");
+        }
+
+        // Manager/SuperAdmin can have null personId/personType
+        boolean isManager = roles.contains(Role.ROLE_MANAGER) || roles.contains(Role.ROLE_SUPER_ADMIN);
+        if (isManager) {
+            // ok
+        }
+    }
+}

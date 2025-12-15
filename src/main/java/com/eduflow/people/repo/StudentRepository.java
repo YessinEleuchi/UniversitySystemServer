@@ -8,10 +8,14 @@ import java.util.Optional;
 
 public interface StudentRepository extends MongoRepository<Student, String> {
 
-    Optional<Student> findByMatricule(String matricule);
+    Optional<Student> findByMatriculeIgnoreCase(String matricule);
 
-    Optional<Student> findByEmail(String email);
+    Optional<Student> findByEmailIgnoreCase(String email);
 
-    // pour lister les étudiants d'une classe donnée
-    List<Student> findByClassGroupId(String classGroupId);
+    // pour lister les étudiants d'une classe donnée (tri utile pour UI)
+    List<Student> findByClassGroupIdOrderByLastNameAscFirstNameAsc(String classGroupId);
+
+    List<Student> findByOrderByLastNameAscFirstNameAsc();
+
+
 }
