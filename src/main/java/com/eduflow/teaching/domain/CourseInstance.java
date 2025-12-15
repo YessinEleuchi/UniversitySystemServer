@@ -17,16 +17,16 @@ public class CourseInstance {
     private String id;
 
     @Indexed
-    private String subjectId;      // ref -> academic.subject
+    private String courseId;     // ref -> courses
 
     @Indexed
-    private String classGroupId;   // ref -> teaching.classGroup
+    private String classGroupId; // L2 GL A
 
     @Indexed
-    private String teacherId;      // ref -> people.teacher
+    private String teacherId;    // Dr Ahmed
 
     @Indexed
-    private String semesterId;     // ref -> academic.semester
+    private String semesterId;   // S1
 
-    private Integer academicYear;  // pour filtrer par année
+    private Integer academicYear; // 2024
 }

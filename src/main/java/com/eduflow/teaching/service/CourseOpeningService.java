@@ -92,8 +92,8 @@ public class CourseOpeningService {
 
         // 8. Unicité du cours pour (classGroup + subject + semester + academicYear)
         Optional<CourseInstance> existing = courseInstanceRepository
-                .findByClassGroupIdAndSubjectIdAndSemesterIdAndAcademicYear(
-                        classGroupId, subjectId, semesterId, finalAcademicYear);
+                .findByClassGroupIdAndSemesterIdAndAcademicYear(
+                        classGroupId, semesterId, finalAcademicYear);
 
         if (existing.isPresent()) {
             throw new IllegalStateException(
@@ -102,7 +102,6 @@ public class CourseOpeningService {
 
         // 9. Création de l'instance de cours
         CourseInstance courseInstance = CourseInstance.builder()
-                .subjectId(subjectId)
                 .classGroupId(classGroupId)
                 .teacherId(teacherId)
                 .semesterId(semesterId)

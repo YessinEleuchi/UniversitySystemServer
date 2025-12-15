@@ -31,9 +31,8 @@ public interface CourseInstanceRepository extends MongoRepository<CourseInstance
      */
     List<CourseInstance> findByAcademicYear(Integer academicYear);
 
-    Optional<CourseInstance> findByClassGroupIdAndSubjectIdAndSemesterIdAndAcademicYear(
+    Optional<CourseInstance> findByClassGroupIdAndSemesterIdAndAcademicYear(
             String classGroupId,
-            String subjectId,
             String semesterId,
             Integer academicYear);
 
@@ -50,7 +49,7 @@ public interface CourseInstanceRepository extends MongoRepository<CourseInstance
     /**
      * Tous les cours d'une matière dans une classe (historique ou suivi).
      */
-    List<CourseInstance> findByClassGroupIdAndSubjectId(String classGroupId, String subjectId);
+    List<CourseInstance> findByClassGroupId(String classGroupId, String subjectId);
     Long countByTeacherId(String teacherId);
 
     /**
