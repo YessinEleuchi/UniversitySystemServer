@@ -15,27 +15,17 @@ public class CycleAdminController {
     private final CycleService cycleService;
 
     @GetMapping
-    public String listCycles(Model model) {
+    public String list(Model model) {
         model.addAttribute("cycles", cycleService.getAllCycles());
-        return "admin/cycles/list"; // templates/admin/cycles/list.html
+        model.addAttribute("cycle", new Cycle()); // pour le form create
+        return "admin/academic/cycles/list";
     }
 
-    @GetMapping("/new")
-    public String showCreateForm(Model model) {
-        model.addAttribute("cycle", new Cycle());
-        return "admin/cycles/form"; // form create/edit
-    }
 
     @PostMapping
     public String create(@ModelAttribute Cycle cycle) {
         cycleService.createCycle(cycle);
         return "redirect:/admin/cycles";
-    }
-
-    @GetMapping("/{id}/edit")
-    public String edit(@PathVariable String id, Model model) {
-        model.addAttribute("cycle", cycleService.getCycle(id));
-        return "admin/cycles/form";
     }
 
     @PostMapping("/{id}")

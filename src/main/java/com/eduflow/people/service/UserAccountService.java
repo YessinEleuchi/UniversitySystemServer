@@ -1,4 +1,4 @@
-package com.eduflow.people.service;
+/**package com.eduflow.people.service;
 
 import com.eduflow.people.domain.UserAccount;
 import com.eduflow.people.repo.UserAccountRepository;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * - Roles: ROLE_STUDENT, ROLE_TEACHER, ROLE_ADMIN...
  * - Compte activé par défaut, peut être verrouillé
  * </p>
- */
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -44,7 +44,7 @@ public class UserAccountService {
 
     /**
      * Crée un compte utilisateur (inscription ou admin).
-     */
+
     public UserAccount createUser(String username,
                                   String rawPassword,
                                   Set<String> roles,
@@ -75,7 +75,7 @@ public class UserAccountService {
 
     /**
      * Récupère un compte par username (pour Spring Security UserDetailsService).
-     */
+
     public UserAccount getByUsername(String username) {
         return userAccountRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + username));
@@ -83,7 +83,7 @@ public class UserAccountService {
 
     /**
      * Change le mot de passe (avec ancien mot de passe pour sécurité).
-     */
+
     public void changePassword(String username, String oldPassword, String newPassword) {
         UserAccount ua = getByUsername(username);
 
@@ -98,7 +98,7 @@ public class UserAccountService {
 
     /**
      * Active/désactive un compte (admin).
-     */
+
     public UserAccount toggleEnabled(String username, boolean enabled) {
         UserAccount ua = getByUsername(username);
         ua.setEnabled(enabled);
@@ -108,7 +108,7 @@ public class UserAccountService {
 
     /**
      * Verrouille/déverrouille (après trop de tentatives).
-     */
+
     public UserAccount toggleLock(String username, boolean locked) {
         UserAccount ua = getByUsername(username);
         ua.setAccountNonLocked(!locked);
@@ -117,7 +117,7 @@ public class UserAccountService {
 
     /**
      * Trouve le compte lié à une personne (étudiant/prof).
-     */
+
     public UserAccount getByPersonIdAndType(String personId, String personType) {
         return userAccountRepository.findByPersonIdAndPersonType(personId, personType.toUpperCase())
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -126,7 +126,7 @@ public class UserAccountService {
 
     /**
      * Tous les comptes d'un type (pour admin).
-     */
+
     public java.util.List<UserAccount> getAllByPersonType(String personType) {
         return userAccountRepository.findByPersonTypeOrderByUsernameAsc(personType.toUpperCase());
     }
@@ -160,4 +160,4 @@ public class UserAccountService {
             throw new IllegalArgumentException("personType invalide : " + personType);
         }
     }
-}
+}*/

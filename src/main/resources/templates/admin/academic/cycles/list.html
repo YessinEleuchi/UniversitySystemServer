@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycles - UniFlow</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/admin}">
+            <i class="bi bi-mortarboard-fill"></i> UniFlow Admin
+        </a>
+
+        <div class="d-flex">
+            <a class="btn btn-outline-light btn-sm" th:href="@{/admin/cycles}">
+                <i class="bi bi-diagram-3"></i> Cycles
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin}">Admin</a></li>
+            <li class="breadcrumb-item active">Cycles</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-diagram-3"></i> Cycles
+            <small class="text-muted">
+                (<span th:text="${#lists.size(cycles)}">0</span>)
+            </small>
+
+        </h1>
+
+        <!-- New Cycle -->
+        <button type="button" class="btn btn-success"
+                data-bs-toggle="modal" data-bs-target="#createCycleModal">
+            <i class="bi bi-plus-circle"></i> New Cycle
+        </button>
+    </div>
+
+    <div class="table-responsive" th:if="${cycles != null and !cycles.isEmpty()}">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th style="width: 20%;">Code</th>
+                <th style="width: 20%;">Label</th>
+                <th style="width: 30%;">Id</th>
+                <th style="width: 30%;">Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="c : ${cycles}">
+                <td>
+                    <span class="badge text-bg-primary" th:text="${c.code}">CYC-001</span>
+                </td>
+
+                <td>
+                    <span class="badge bg-info text-dark" th:text="${c.label}">LICENCE</span>
+                </td>
+
+                <td class="text-muted small" th:text="${c.id}">id</td>
+
+                <td>
+                    <a th:href="@{/admin/academic/cycles/{id}/specialities(id=${c.id})}"
+                       class="btn btn-sm btn-primary me-1">
+                        <i class="bi bi-arrow-right"></i> Specialities
+                    </a>
+
+                    <button type="button" class="btn btn-sm btn-warning me-1"
+                            data-bs-toggle="modal" data-bs-target="#editCycleModal"
+                            th:attr="data-id=${c.id},data-code=${c.code},data-label=${c.label}"
+                            onclick="openEditCycleModal(this)">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+
+
+
+                    <form th:action="@{/admin/cycles/{id}/delete(id=${c.id})}"
+                          method="post" style="display:inline;"
+                          onsubmit="return confirm('Are you sure you want to delete this cycle?');">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${cycles == null or cycles.isEmpty()}" class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No cycles found.
+        <button type="button" class="btn btn-link p-0 align-baseline"
+                data-bs-toggle="modal" data-bs-target="#cycleModal"
+                onclick="openCreateModal()">
+            Create one
+        </button>
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="createCycleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form id="createCycleForm" th:action="@{/admin/cycles}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Cycle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input class="form-control" id="createCode" name="code" required placeholder="CYC-001">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <select class="form-select" id="createLabel" name="label" required>
+                            <option value="" selected disabled>-- Select --</option>
+                            <option value="PREPA">PREPA</option>
+                            <option value="LICENCE">LICENCE</option>
+                            <option value="INGENIEUR">INGENIEUR</option>
+                            <option value="MASTER">MASTER</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Create
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editCycleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form id="editCycleForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Cycle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="editId" name="id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input class="form-control" id="editCode" name="code" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <select class="form-select" id="editLabel" name="label" required>
+                            <option value="PREPA">PREPA</option>
+                            <option value="LICENCE">LICENCE</option>
+                            <option value="INGENIEUR">INGENIEUR</option>
+                            <option value="MASTER">MASTER</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-secondary small mb-0">
+                        Editing id: <b id="editIdText">-</b>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Update
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // reset create modal each time it opens
+    document.addEventListener('DOMContentLoaded', () => {
+        const createModal = document.getElementById('createCycleModal');
+        if (createModal) {
+            createModal.addEventListener('show.bs.modal', () => {
+                document.getElementById('createCode').value = '';
+                document.getElementById('createLabel').value = '';
+            });
+        }
+    });
+
+    function openEditCycleModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const code = btn.getAttribute('data-code');
+        const label = btn.getAttribute('data-label');
+
+        document.getElementById('editId').value = id;
+        document.getElementById('editCode').value = code;
+        document.getElementById('editLabel').value = label;
+
+        document.getElementById('editIdText').textContent = id;
+
+        // IMPORTANT: action vers ton endpoint update
+        document.getElementById('editCycleForm').action = '/admin/cycles/' + id;
+    }
+</script>
+
+
+
+
+
+
+
+</body>
+</html>
