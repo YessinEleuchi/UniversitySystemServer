@@ -26,5 +26,5 @@ public class Subject {
 
     private Integer credits;     // optionnel: 3, 6...
 
-    private Integer coefficient; // si vous utilisez coef
+    private Double coefficient; // si vous utilisez coef
 }
