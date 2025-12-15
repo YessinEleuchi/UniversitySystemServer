@@ -1,115 +1,163 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard - UniFlow</title>
 
-    <!-- Tailwind CSS CDN (v3.4+) -->
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Bootstrap Icons (on garde les icônes que tu aimes) -->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
 
-<!-- Navbar -->
-<nav class="bg-blue-600 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-            <a href="/admin" th:href="@{/admin}" class="flex items-center space-x-3 text-xl font-bold">
-                <i class="bi bi-mortarboard-fill text-2xl"></i>
-                <span>UniFlow Admin</span>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+
+<!-- Navbar (same style as others: white + border + blur) -->
+<nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <a th:href="@{/admin}" class="flex items-center gap-2 font-semibold text-slate-900">
+            <i class="bi bi-mortarboard-fill text-indigo-600 text-lg"></i>
+            <span>UniFlow Admin</span>
+        </a>
+
+        <div class="flex items-center gap-2">
+            <a th:href="@{/admin/cycles}"
+               class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                <i class="bi bi-diagram-3"></i>
+                <span>Cycles</span>
             </a>
-
-            <div class="flex items-center space-x-3">
-                <a href="/admin/cycles" th:href="@{/admin/cycles}"
-                   class="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg transition">
-                    <i class="bi bi-diagram-3"></i>
-                    <span>Cycles</span>
-                </a>
-            </div>
         </div>
     </div>
 </nav>
 
-<!-- Contenu principal -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-            <i class="bi bi-speedometer2 text-4xl text-blue-600"></i>
-            Dashboard
-        </h1>
+<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4 text-sm">
+        <ol class="flex flex-wrap items-center gap-x-2 text-slate-600">
+            <li><a th:href="@{/admin}" class="hover:text-slate-900 hover:underline">Admin</a></li>
+            <li class="text-slate-400">/</li>
+            <li class="font-semibold text-slate-900">Dashboard</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+                <i class="bi bi-speedometer2 text-lg"></i>
+            </div>
+
+            <div>
+                <h1 class="text-xl font-semibold leading-tight">Dashboard</h1>
+                <p class="text-sm text-slate-500">Overview of academic structure</p>
+            </div>
+        </div>
+
+        <!-- Quick action -->
+        <a th:href="@{/admin/cycles}"
+           class="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <i class="bi bi-arrow-right"></i>
+            Go to Cycles
+        </a>
     </div>
 
-    <!-- Grille de cartes -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Cards grid -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
         <!-- Cycles -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 border border-gray-200">
-            <div class="flex justify-between items-start mb-4">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Cycles</p>
-                    <p class="text-4xl font-bold text-gray-900" th:text="${cyclesCount}">0</p>
+                    <p class="text-sm text-slate-500">Cycles</p>
+                    <p class="mt-1 text-4xl font-semibold text-slate-900" th:text="${cyclesCount}">0</p>
                 </div>
-                <i class="bi bi-diagram-3 text-5xl text-blue-600 opacity-70"></i>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100">
+                    <i class="bi bi-diagram-3 text-xl"></i>
+                </div>
             </div>
-            <a href="/admin/cycles" th:href="@{/admin/cycles}"
-               class="inline-flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition">
-                Gérer les cycles <i class="bi bi-arrow-right"></i>
-            </a>
+
+            <div class="mt-4">
+                <a th:href="@{/admin/cycles}"
+                   class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700">
+                    Manage cycles <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
         </div>
 
-        <!-- Spécialités -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 border border-gray-200">
-            <div class="flex justify-between items-start mb-4">
+        <!-- Specialities -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Spécialités</p>
-                    <p class="text-4xl font-bold text-gray-900" th:text="${specialitiesCount}">0</p>
+                    <p class="text-sm text-slate-500">Spécialités</p>
+                    <p class="mt-1 text-4xl font-semibold text-slate-900" th:text="${specialitiesCount}">0</p>
                 </div>
-                <i class="bi bi-bookmark-star text-5xl text-indigo-600 opacity-70"></i>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200">
+                    <i class="bi bi-bookmark-star text-xl"></i>
+                </div>
             </div>
-            <p class="text-xs text-gray-500">Ouvrir depuis un cycle</p>
+
+            <p class="mt-3 text-xs text-slate-500">
+                Ouvrir depuis un cycle
+            </p>
         </div>
 
-        <!-- Niveaux -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 border border-gray-200">
-            <div class="flex justify-between items-start mb-4">
+        <!-- Levels -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Niveaux</p>
-                    <p class="text-4xl font-bold text-gray-900" th:text="${levelsCount}">0</p>
+                    <p class="text-sm text-slate-500">Niveaux</p>
+                    <p class="mt-1 text-4xl font-semibold text-slate-900" th:text="${levelsCount}">0</p>
                 </div>
-                <i class="bi bi-layers text-5xl text-purple-600 opacity-70"></i>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200">
+                    <i class="bi bi-layers text-xl"></i>
+                </div>
             </div>
-            <p class="text-xs text-gray-500">Ouvrir depuis une spécialité</p>
+
+            <p class="mt-3 text-xs text-slate-500">
+                Ouvrir depuis une spécialité
+            </p>
         </div>
 
-        <!-- Semestres -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 border border-gray-200">
-            <div class="flex justify-between items-start mb-4">
+        <!-- Semesters -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Semestres</p>
-                    <p class="text-4xl font-bold text-gray-900" th:text="${semestersCount}">0</p>
+                    <p class="text-sm text-slate-500">Semestres</p>
+                    <p class="mt-1 text-4xl font-semibold text-slate-900" th:text="${semestersCount}">0</p>
                 </div>
-                <i class="bi bi-calendar3 text-5xl text-green-600 opacity-70"></i>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200">
+                    <i class="bi bi-calendar3 text-xl"></i>
+                </div>
             </div>
-            <p class="text-xs text-gray-500">Ouvrir depuis un niveau</p>
+
+            <p class="mt-3 text-xs text-slate-500">
+                Ouvrir depuis un niveau
+            </p>
         </div>
 
-        <!-- Matières -->
-        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 border border-gray-200">
-            <div class="flex justify-between items-start mb-4">
+        <!-- Subjects -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Matières</p>
-                    <p class="text-4xl font-bold text-gray-900" th:text="${subjectsCount}">0</p>
+                    <p class="text-sm text-slate-500">Matières</p>
+                    <p class="mt-1 text-4xl font-semibold text-slate-900" th:text="${subjectsCount}">0</p>
                 </div>
-                <i class="bi bi-book text-5xl text-orange-600 opacity-70"></i>
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200">
+                    <i class="bi bi-book text-xl"></i>
+                </div>
             </div>
-            <p class="text-xs text-gray-500">Ouvrir depuis un semestre</p>
+
+            <p class="mt-3 text-xs text-slate-500">
+                Ouvrir depuis un semestre
+            </p>
         </div>
 
     </div>
-</div>
+
+</main>
 
 </body>
 </html>
