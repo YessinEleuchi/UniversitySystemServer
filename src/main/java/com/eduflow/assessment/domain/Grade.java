@@ -26,7 +26,7 @@ public class Grade {
     private String evaluationId;   // ref -> assessments.evaluations
 
     @Indexed
-    private String studentId;      // ref -> people.students
+    private String enrollmentId;   // lien direct vers Enrollment
 
     private Double score;          // ex: 14.5
 
