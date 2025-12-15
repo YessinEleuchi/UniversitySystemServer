@@ -2,92 +2,215 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Semesters - UniFlow</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/admin/cycles">
-                <i class="bi bi-mortarboard-fill"></i> UniFlow Admin
-            </a>
-        </div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/admin}">
+            <i class="bi bi-mortarboard-fill"></i> UniFlow Admin
+        </a>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/cycles}">Cycles</a></li>
+            <li class="breadcrumb-item">Speciality</li>
+            <li class="breadcrumb-item">
+                <a th:href="@{/admin/academic/specialities/{id}/levels(id=${level.specialityId})}">
+                    Levels
+                </a>
+            </li>
+            <li class="breadcrumb-item active" th:text="${level.code}">Level</li>
+        </ol>
     </nav>
 
-    <div class="container-fluid mt-4">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/admin/cycles">Cycles</a></li>
-                <li class="breadcrumb-item">Speciality</li>
-                <li class="breadcrumb-item">
-                    <a th:href="@{/admin/academic/specialities/{id}/levels(id=${level.specialityId})}">Levels</a>
-                </li>
-                <li class="breadcrumb-item active" th:text="${level.code}">Level</li>
-            </ol>
-        </nav>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="bi bi-calendar3"></i> Semesters
+            <small class="text-muted" th:text="'(' + ${level.label} + ')'">(Level)</small>
+        </h1>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>
-                <i class="bi bi-calendar3"></i> Semesters 
-                <small class="text-muted" th:text="'(' + ${level.label} + ')'">(Level)</small>
-            </h1>
-            <a th:href="@{/admin/academic/levels/{id}/semesters/new(id=${level.id})}" 
-               class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> New Semester
-            </a>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Code</th>
-                        <th>Label</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="semester : ${semesters}">
-                        <td th:text="${semester.code}">Code</td>
-                        <td th:text="${semester.label}">Label</td>
-                        <td>
-                            <a th:href="@{/admin/academic/semesters/{id}/subjects(id=${semester.id})}" 
-                               class="btn btn-sm btn-primary me-1">
-                                <i class="bi bi-arrow-right"></i> Subjects
-                            </a>
-                            <a th:href="@{/admin/academic/semesters/{id}/edit(id=${semester.id})}" 
-                               class="btn btn-sm btn-warning me-1">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                            <form th:action="@{/admin/academic/semesters/{id}/delete(id=${semester.id})}" 
-                                  method="post" style="display: inline;" 
-                                  onsubmit="return confirm('Are you sure you want to delete this semester?');">
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div th:if="${semesters == null or semesters.isEmpty()}" class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No semesters found for this level.
-            <a th:href="@{/admin/academic/levels/{id}/semesters/new(id=${level.id})}" class="alert-link">Create one</a>
-        </div>
-
-        <div class="mt-3">
-            <a th:href="@{/admin/academic/specialities/{id}/levels(id=${level.specialityId})}" 
-               class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Levels
-            </a>
-        </div>
+        <!-- NEW SEMESTER -->
+        <button class="btn btn-success"
+                data-bs-toggle="modal"
+                data-bs-target="#createSemesterModal">
+            <i class="bi bi-plus-circle"></i> New Semester
+        </button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- TABLE -->
+    <div class="table-responsive" th:if="${semesters != null and !semesters.isEmpty()}">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th style="width: 25%">Code</th>
+                <th style="width: 35%">Label</th>
+                <th style="width: 40%">Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="s : ${semesters}">
+                <td th:text="${s.code}">S1</td>
+                <td th:text="${s.label}">Semester 1</td>
+                <td>
+                    <a th:href="@{/admin/academic/semesters/{id}/subjects(id=${s.id})}"
+                       class="btn btn-sm btn-primary me-1">
+                        <i class="bi bi-arrow-right"></i> Subjects
+                    </a>
+
+                    <!-- EDIT MODAL -->
+                    <button class="btn btn-sm btn-warning me-1"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editSemesterModal"
+                            th:attr="data-id=${s.id},data-code=${s.code},data-label=${s.label}"
+                            onclick="openEditSemesterModal(this)">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+
+                    <!-- DELETE -->
+                    <form th:action="@{/admin/academic/semesters/{id}/delete(id=${s.id})}"
+                          method="post"
+                          style="display:inline"
+                          onsubmit="return confirm('Delete this semester?');">
+                        <button class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- EMPTY -->
+    <div th:if="${semesters == null or semesters.isEmpty()}" class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No semesters found.
+        <button class="btn btn-link p-0"
+                data-bs-toggle="modal"
+                data-bs-target="#createSemesterModal">
+            Create one
+        </button>
+    </div>
+
+    <!-- BACK -->
+    <div class="mt-3">
+        <a th:href="@{/admin/academic/specialities/{id}/levels(id=${level.specialityId})}"
+           class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Levels
+        </a>
+    </div>
+
+</div>
+
+<!-- =========================
+     CREATE SEMESTER MODAL
+========================= -->
+<div class="modal fade" id="createSemesterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form th:action="@{/admin/academic/levels/{id}/semesters(id=${level.id})}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Semester</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input class="form-control" name="code" required placeholder="S1">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <input class="form-control" name="label" required placeholder="Semester 1">
+                    </div>
+
+                    <input type="hidden" name="levelId" th:value="${level.id}">
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Create
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- =========================
+     EDIT SEMESTER MODAL
+========================= -->
+<div class="modal fade" id="editSemesterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form id="editSemesterForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Semester</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="editSemesterId" name="id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input class="form-control" id="editSemesterCode" name="code" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <input class="form-control" id="editSemesterLabel" name="label" required>
+                    </div>
+
+                    <input type="hidden" name="levelId" th:value="${level.id}">
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Update
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function openEditSemesterModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const code = btn.getAttribute('data-code');
+        const label = btn.getAttribute('data-label');
+
+        document.getElementById('editSemesterId').value = id;
+        document.getElementById('editSemesterCode').value = code;
+        document.getElementById('editSemesterLabel').value = label;
+
+        document.getElementById('editSemesterForm').action =
+            '/admin/academic/semesters/' + id;
+    }
+</script>
+
 </body>
 </html>
-
