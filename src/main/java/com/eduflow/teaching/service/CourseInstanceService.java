@@ -18,7 +18,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional // Garantit que toutes les vérifications + sauvegarde sont atomiques
-public class CourseOpeningService {
+public class CourseInstanceService {
 
     private final CourseInstanceRepository courseInstanceRepository;
     private final ClassGroupRepository classGroupRepository;
