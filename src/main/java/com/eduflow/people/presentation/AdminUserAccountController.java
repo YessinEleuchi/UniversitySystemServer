@@ -28,12 +28,12 @@ public class AdminUserAccountController {
         model.addAttribute("students", userAccountService.getAllByRole(Role.ROLE_STUDENT));
         model.addAttribute("teachers", userAccountService.getAllByRole(Role.ROLE_TEACHER));
 
-        // ✅ pour les selects des modals create accounts
-        model.addAttribute("allStudents", studentRepository.findAll());
-        model.addAttribute("allTeachers", teacherRepository.findAll());
+        model.addAttribute("allStudents", userAccountService.getStudentsWithoutAccount());
+        model.addAttribute("allTeachers", userAccountService.getTeachersWithoutAccount());
 
         return "admin/users/list";
     }
+
 
     // ➕ CREATE MANAGER
     @GetMapping("/managers/new")

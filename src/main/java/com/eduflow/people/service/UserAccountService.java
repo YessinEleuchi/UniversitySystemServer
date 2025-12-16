@@ -187,4 +187,17 @@ public class UserAccountService {
         }
         return userRepo.findByRolesContainingOrderByUsernameAsc(role);
     }
+    public List<Student> getStudentsWithoutAccount() {
+        return studentRepo.findAll().stream()
+                .filter(s -> s.getId() != null
+                        && !userRepo.existsByPersonIdAndPersonType(s.getId(), PersonType.STUDENT))
+                .toList();
+    }
+
+    public List<Teacher> getTeachersWithoutAccount() {
+        return teacherRepo.findAll().stream()
+                .filter(t -> t.getId() != null
+                        && !userRepo.existsByPersonIdAndPersonType(t.getId(), PersonType.TEACHER))
+                .toList();
+    }
 }
