@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(content=~{::section}, title='Users')}">
+
+<section>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">Users</h1>
+            <p class="text-slate-500">Manage managers, teacher accounts, and student accounts.</p>
+        </div>
+
+        <div class="flex gap-2">
+            <button type="button" data-open="createManagerModal"
+                    class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                + New Manager
+            </button>
+
+            <button type="button" data-open="createTeacherModal"
+                    class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                + Teacher Account
+            </button>
+
+            <button type="button" data-open="createStudentModal"
+                    class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                + Student Account
+            </button>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${error}" class="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-red-700" th:text="${error}"></div>
+
+    <div th:if="${success}" class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-800" th:text="${success}"></div>
+
+    <div th:if="${generatedPassword}" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-800">
+        <span class="font-semibold">Copy now:</span>
+        <span th:text="${generatedPassword}"></span>
+    </div>
+
+    <!-- ===================== -->
+    <!-- Managers -->
+    <!-- ===================== -->
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-4 py-3 font-semibold">Managers</div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-left">Username</th>
+                    <th class="px-4 py-3 text-left">Enabled</th>
+                    <th class="px-4 py-3 text-left">Locked</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${managers}" class="border-t">
+                    <td class="px-4 py-3 font-medium" th:text="${u.username}"></td>
+                    <td class="px-4 py-3" th:text="${u.enabled}"></td>
+                    <td class="px-4 py-3" th:text="${!u.accountNonLocked}"></td>
+                    <td class="px-4 py-3">
+                        <div class="flex justify-end gap-2">
+
+                            <!-- View -->
+                            <button type="button"
+                                    data-open="viewUserModal"
+                                    th:attr="
+                                      data-username=${u.username},
+                                      data-roles=${u.roles},
+                                      data-enabled=${u.enabled},
+                                      data-locked=${!u.accountNonLocked},
+                                      data-persontype=${u.personType},
+                                      data-personid=${u.personId}
+                                    "
+                                    class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                                View
+                            </button>
+
+                            <!-- Enable/Disable -->
+                            <form th:action="@{/admin/users/{username}/enable(username=${u.username})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" name="enabled" th:value="${!u.enabled}"/>
+                                <button class="rounded-lg border px-3 py-1.5 hover:bg-slate-50"
+                                        th:text="${u.enabled ? 'Disable' : 'Enable'}">
+                                </button>
+                            </form>
+
+                            <!-- Lock/Unlock -->
+                            <form th:action="@{/admin/users/{username}/lock(username=${u.username})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" name="locked" th:value="${u.accountNonLocked}"/>
+                                <button class="rounded-lg border px-3 py-1.5 hover:bg-slate-50"
+                                        th:text="${u.accountNonLocked ? 'Lock' : 'Unlock'}">
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(managers)}" class="border-t">
+                    <td colspan="4" class="px-4 py-4 text-slate-500">No managers yet.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- Teachers -->
+    <!-- ===================== -->
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-4 py-3 font-semibold">Teacher Accounts</div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-left">Username</th>
+                    <th class="px-4 py-3 text-left">PersonId</th>
+                    <th class="px-4 py-3 text-left">Enabled</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${teachers}" class="border-t">
+                    <td class="px-4 py-3 font-medium" th:text="${u.username}"></td>
+                    <td class="px-4 py-3 text-slate-600" th:text="${u.personId}"></td>
+                    <td class="px-4 py-3" th:text="${u.enabled}"></td>
+
+                    <td class="px-4 py-3">
+                        <div class="flex justify-end gap-2">
+
+                            <!-- View -->
+                            <button type="button"
+                                    data-open="viewUserModal"
+                                    th:attr="
+                                      data-username=${u.username},
+                                      data-roles=${u.roles},
+                                      data-enabled=${u.enabled},
+                                      data-locked=${!u.accountNonLocked},
+                                      data-persontype=${u.personType},
+                                      data-personid=${u.personId}
+                                    "
+                                    class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                                View
+                            </button>
+
+                            <form th:action="@{/admin/users/{username}/enable(username=${u.username})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" name="enabled" th:value="${!u.enabled}"/>
+                                <button class="rounded-lg border px-3 py-1.5 hover:bg-slate-50"
+                                        th:text="${u.enabled ? 'Disable' : 'Enable'}"></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(teachers)}" class="border-t">
+                    <td colspan="4" class="px-4 py-4 text-slate-500">No teacher accounts yet.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- Students -->
+    <!-- ===================== -->
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-white">
+        <div class="border-b border-slate-200 px-4 py-3 font-semibold">Student Accounts</div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                    <th class="px-4 py-3 text-left">Username</th>
+                    <th class="px-4 py-3 text-left">PersonId</th>
+                    <th class="px-4 py-3 text-left">Enabled</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${students}" class="border-t">
+                    <td class="px-4 py-3 font-medium" th:text="${u.username}"></td>
+                    <td class="px-4 py-3 text-slate-600" th:text="${u.personId}"></td>
+                    <td class="px-4 py-3" th:text="${u.enabled}"></td>
+
+                    <td class="px-4 py-3">
+                        <div class="flex justify-end gap-2">
+
+                            <!-- View -->
+                            <button type="button"
+                                    data-open="viewUserModal"
+                                    th:attr="
+                                      data-username=${u.username},
+                                      data-roles=${u.roles},
+                                      data-enabled=${u.enabled},
+                                      data-locked=${!u.accountNonLocked},
+                                      data-persontype=${u.personType},
+                                      data-personid=${u.personId}
+                                    "
+                                    class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                                View
+                            </button>
+
+                            <form th:action="@{/admin/users/{username}/enable(username=${u.username})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <input type="hidden" name="enabled" th:value="${!u.enabled}"/>
+                                <button class="rounded-lg border px-3 py-1.5 hover:bg-slate-50"
+                                        th:text="${u.enabled ? 'Disable' : 'Enable'}"></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(students)}" class="border-t">
+                    <td colspan="4" class="px-4 py-4 text-slate-500">No student accounts yet.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- CREATE MANAGER MODAL -->
+    <!-- ========================================================= -->
+    <div id="createManagerModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="createManagerModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Create Manager</h2>
+                        <p class="text-sm text-slate-500">Creates a ROLE_MANAGER account (no person link).</p>
+                    </div>
+                    <button type="button" data-close="createManagerModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <form th:action="@{/admin/users/managers}" method="post"
+                      class="p-5 space-y-4">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div>
+                        <label class="text-sm font-medium">Username (email)</label>
+                        <input name="username" required class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium">Password</label>
+                        <input name="password" type="password"
+                               placeholder="Leave empty to auto-generate"
+                               class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        <p class="mt-1 text-xs text-slate-500">If empty, a strong password will be generated.</p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close="createManagerModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">Cancel</button>
+                        <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Create
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- CREATE TEACHER ACCOUNT MODAL -->
+    <!-- ========================================================= -->
+    <div id="createTeacherModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="createTeacherModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-2xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Create Teacher Account</h2>
+                        <p class="text-sm text-slate-500">Links ROLE_TEACHER to a Teacher.</p>
+                    </div>
+                    <button type="button" data-close="createTeacherModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <form th:action="@{/admin/users/teachers}" method="post"
+                      class="p-5 space-y-4">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div>
+                        <label class="text-sm font-medium">Teacher</label>
+                        <select id="teacherSelect" name="teacherId" required
+                                class="mt-1 w-full rounded-xl border px-3 py-2">
+                        <option value="" disabled selected>-- select teacher --</option>
+                            <option th:each="t : ${allTeachers}"
+                                    th:value="${t.id}"
+                                    th:data-email="${t.email}"
+                                    th:text="${t.code + ' - ' + t.lastName + ' ' + t.firstName}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">Username (email/login)</label>
+                            <input id="teacherUsername" name="username" required
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Password</label>
+                            <input name="password" type="password"
+                                   placeholder="Leave empty to auto-generate"
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                            <p class="mt-1 text-xs text-slate-500">If empty, a strong password will be generated.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close="createTeacherModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">Cancel</button>
+                        <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- CREATE STUDENT ACCOUNT MODAL -->
+    <!-- ========================================================= -->
+    <div id="createStudentModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="createStudentModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-2xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Create Student Account</h2>
+                        <p class="text-sm text-slate-500">Links ROLE_STUDENT to a Student.</p>
+                    </div>
+                    <button type="button" data-close="createStudentModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <form th:action="@{/admin/users/students}" method="post"
+                      class="p-5 space-y-4">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div>
+                        <label class="text-sm font-medium">Student</label>
+                        <select id="studentSelect" name="studentId" required
+                                class="mt-1 w-full rounded-xl border px-3 py-2">
+                            <option value="" disabled selected>-- select student --</option>
+                            <option th:each="s : ${allStudents}"
+                                    th:value="${s.id}"
+                                    th:data-email="${s.email}"
+                                    th:text="${s.matricule + ' - ' + s.lastName + ' ' + s.firstName}">
+                            </option>
+
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">Username (email/login)</label>
+                            <input id="studentUsername" name="username" required
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Password</label>
+                            <input name="password" type="password"
+                                   placeholder="Leave empty to auto-generate"
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                            <p class="mt-1 text-xs text-slate-500">If empty, a strong password will be generated.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close="createStudentModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">Cancel</button>
+                        <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- VIEW USER MODAL -->
+    <!-- ========================================================= -->
+    <div id="viewUserModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="viewUserModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-2xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-start justify-between gap-4 border-b px-5 py-4">
+                    <div>
+                        <h2 id="v_username" class="text-lg font-bold">User</h2>
+                        <p class="text-sm text-slate-500">
+                            Roles: <span id="v_roles" class="font-medium text-slate-700"></span>
+                        </p>
+                    </div>
+                    <button type="button" data-close="viewUserModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2">
+                        <p><span class="text-slate-500">Enabled:</span> <span id="v_enabled"></span></p>
+                        <p><span class="text-slate-500">Locked:</span> <span id="v_locked"></span></p>
+                        <p><span class="text-slate-500">PersonType:</span> <span id="v_personType"></span></p>
+                        <p><span class="text-slate-500">PersonId:</span> <span id="v_personId"></span></p>
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                        <form id="v_enableForm" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <input type="hidden" id="v_enableValue" name="enabled" value="true"/>
+                            <button id="v_enableBtn" class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                                Toggle Enable
+                            </button>
+                        </form>
+
+                        <form id="v_lockForm" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <input type="hidden" id="v_lockValue" name="locked" value="false"/>
+                            <button id="v_lockBtn" class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                                Toggle Lock
+                            </button>
+                        </form>
+
+                        <button type="button" data-close="viewUserModal"
+                                class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- MODAL JS -->
+    <!-- ========================================================= -->
+    <script>
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-open]');
+            if (!btn) return;
+
+            const modalId = btn.getAttribute('data-open');
+
+            if (modalId === 'viewUserModal') {
+                const username = btn.getAttribute('data-username') || '';
+                const roles = btn.getAttribute('data-roles') || '';
+                const enabled = (btn.getAttribute('data-enabled') || 'false') === 'true';
+                const locked = (btn.getAttribute('data-locked') || 'false') === 'true';
+                const personType = btn.getAttribute('data-persontype') || '';
+                const personId = btn.getAttribute('data-personid') || '';
+
+                document.getElementById('v_username').textContent = username;
+                document.getElementById('v_roles').textContent = roles;
+                document.getElementById('v_enabled').textContent = enabled ? 'true' : 'false';
+                document.getElementById('v_locked').textContent = locked ? 'true' : 'false';
+                document.getElementById('v_personType').textContent = personType || '-';
+                document.getElementById('v_personId').textContent = personId || '-';
+
+                // setup enable/lock actions
+                const enableForm = document.getElementById('v_enableForm');
+                const lockForm = document.getElementById('v_lockForm');
+
+                enableForm.setAttribute('action', '/admin/users/' + encodeURIComponent(username) + '/enable');
+                lockForm.setAttribute('action', '/admin/users/' + encodeURIComponent(username) + '/lock');
+
+                // enable toggles to opposite value
+                document.getElementById('v_enableValue').value = (!enabled).toString();
+                document.getElementById('v_enableBtn').textContent = enabled ? 'Disable' : 'Enable';
+
+                // lock param expects "locked" boolean (true => lock)
+                document.getElementById('v_lockValue').value = (!locked).toString();
+                document.getElementById('v_lockBtn').textContent = locked ? 'Unlock' : 'Lock';
+            }
+
+            openModal(modalId);
+        });
+
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close]');
+            if (!closeBtn) return;
+            closeModal(closeBtn.getAttribute('data-close'));
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            closeModal('createManagerModal');
+            closeModal('createTeacherModal');
+            closeModal('createStudentModal');
+            closeModal('viewUserModal');
+        });
+    </script>
+    <script>
+        // ===============================
+        // AUTO-FILL EMAIL (USERNAME)
+        // ===============================
+
+        const teacherSelect = document.getElementById('teacherSelect');
+        const teacherUsername = document.getElementById('teacherUsername');
+
+        if (teacherSelect && teacherUsername) {
+            teacherSelect.addEventListener('change', () => {
+                const option = teacherSelect.selectedOptions[0];
+                const email = option?.dataset?.email;
+                if (email) {
+                    teacherUsername.value = email;
+                }
+            });
+        }
+
+        const studentSelect = document.getElementById('studentSelect');
+        const studentUsername = document.getElementById('studentUsername');
+
+        if (studentSelect && studentUsername) {
+            studentSelect.addEventListener('change', () => {
+                const option = studentSelect.selectedOptions[0];
+                const email = option?.dataset?.email;
+                if (email) {
+                    studentUsername.value = email;
+                }
+            });
+        }
+    </script>
+
+
+</section>
+</html>

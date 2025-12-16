@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(content=~{::section}, title='Teachers')}">
+
+<section>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">Teachers</h1>
+            <p class="text-slate-500">Manage teacher profiles.</p>
+        </div>
+        <button type="button"
+                data-open="createTeacherModal"
+                class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+            + New Teacher
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+            <tr>
+                <th class="px-4 py-3 text-left">Code</th>
+                <th class="px-4 py-3 text-left">Name</th>
+                <th class="px-4 py-3 text-left">Email</th>
+                <th class="px-4 py-3 text-left">Department</th>
+                <th class="px-4 py-3 text-right">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr th:each="t : ${teachers}" class="border-t">
+                <td class="px-4 py-3 font-medium" th:text="${t.code}"></td>
+                <td class="px-4 py-3" th:text="${t.lastName + ' ' + t.firstName}"></td>
+                <td class="px-4 py-3 text-slate-600" th:text="${t.email}"></td>
+                <td class="px-4 py-3" th:text="${t.department}"></td>
+
+                <td class="px-4 py-3 text-right">
+                    <button type="button"
+                            data-open="viewTeacherModal"
+                            th:attr="
+                              data-id=${t.id},
+                              data-code=${t.code},
+                              data-firstname=${t.firstName},
+                              data-lastname=${t.lastName},
+                              data-email=${t.email},
+                              data-phone=${t.phone},
+                              data-department=${t.department}
+                            "
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                        View
+                    </button>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(teachers)}" class="border-t">
+                <td colspan="5" class="px-4 py-4 text-slate-500">No teachers yet.</td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- CREATE TEACHER MODAL -->
+    <!-- ========================= -->
+    <div id="createTeacherModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="createTeacherModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-2xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Create Teacher</h2>
+                        <p class="text-sm text-slate-500">Add a new teacher profile.</p>
+                    </div>
+                    <button type="button" data-close="createTeacherModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <form th:action="@{/admin/teachers}" method="post"
+                      th:object="${teacher}"
+                      class="p-5 space-y-4">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">Code</label>
+                            <input th:field="*{code}" required class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Department</label>
+                            <input th:field="*{department}" class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">First name</label>
+                            <input th:field="*{firstName}" required class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Last name</label>
+                            <input th:field="*{lastName}" required class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">Email</label>
+                            <input th:field="*{email}" type="email" class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Phone</label>
+                            <input th:field="*{phone}" class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close="createTeacherModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                            Cancel
+                        </button>
+                        <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Save
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- VIEW TEACHER MODAL -->
+    <!-- ========================= -->
+    <div id="viewTeacherModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="viewTeacherModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-3xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+
+                <div class="flex items-start justify-between gap-4 border-b px-5 py-4">
+                    <div>
+                        <h2 id="v_name" class="text-lg font-bold">Teacher</h2>
+                        <p class="text-slate-500 text-sm">
+                            Code: <span id="v_code" class="font-medium text-slate-700"></span>
+                            • Load: <span class="font-medium text-slate-700">—</span>
+                        </p>
+                    </div>
+                    <button type="button" data-close="viewTeacherModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">✕</button>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2">
+                        <p><span class="text-slate-500">Email:</span> <span id="v_email"></span></p>
+                        <p><span class="text-slate-500">Phone:</span> <span id="v_phone"></span></p>
+                        <p><span class="text-slate-500">Department:</span> <span id="v_department"></span></p>
+                    </div>
+
+                    <form id="deptForm"
+                          class="rounded-2xl border border-slate-200 bg-white p-5"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <label class="text-sm font-medium">Update Department</label>
+                        <div class="mt-2 flex gap-2">
+                            <input id="deptInput" name="department"
+                                   class="w-full rounded-xl border px-3 py-2"
+                                   placeholder="New department"/>
+                            <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                                Update
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">Tip: keep it consistent (e.g., “Computer Science”).</p>
+                    </form>
+
+                    <div class="flex justify-end">
+                        <button type="button" data-close="viewTeacherModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- MODAL JS -->
+    <!-- ========================= -->
+    <script>
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-open]');
+            if (!btn) return;
+
+            const modalId = btn.getAttribute('data-open');
+
+            if (modalId === 'viewTeacherModal') {
+                const id = btn.getAttribute('data-id') || '';
+                const code = btn.getAttribute('data-code') || '';
+                const firstName = btn.getAttribute('data-firstname') || '';
+                const lastName = btn.getAttribute('data-lastname') || '';
+                const email = btn.getAttribute('data-email') || '';
+                const phone = btn.getAttribute('data-phone') || '';
+                const department = btn.getAttribute('data-department') || '';
+
+                document.getElementById('v_name').textContent = (lastName + ' ' + firstName).trim() || 'Teacher';
+                document.getElementById('v_code').textContent = code;
+                document.getElementById('v_email').textContent = email;
+                document.getElementById('v_phone').textContent = phone;
+                document.getElementById('v_department').textContent = department;
+
+                // update department form action + default input
+                const deptForm = document.getElementById('deptForm');
+                deptForm.setAttribute('action', '/admin/teachers/' + id + '/department');
+                document.getElementById('deptInput').value = department || '';
+            }
+
+            openModal(modalId);
+        });
+
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close]');
+            if (!closeBtn) return;
+            closeModal(closeBtn.getAttribute('data-close'));
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            closeModal('createTeacherModal');
+            closeModal('viewTeacherModal');
+        });
+    </script>
+
+</section>
+</html>

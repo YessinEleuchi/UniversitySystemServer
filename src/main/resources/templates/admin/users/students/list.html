@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(content=~{::section}, title='Students')}">
+
+<section>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">Students</h1>
+            <p class="text-slate-500">Manage student profiles.</p>
+        </div>
+
+        <button type="button"
+                data-open="createStudentModal"
+                class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+            + New Student
+        </button>
+    </div>
+
+    <!-- Error -->
+    <div th:if="${error}" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">
+        <span th:text="${error}"></span>
+    </div>
+
+    <!-- Table -->
+    <div class="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+            <tr>
+                <th class="px-4 py-3 text-left">Matricule</th>
+                <th class="px-4 py-3 text-left">Name</th>
+                <th class="px-4 py-3 text-left">Email</th>
+                <th class="px-4 py-3 text-left">Class</th>
+                <th class="px-4 py-3 text-right">Action</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="s : ${students}" class="border-t">
+                <td class="px-4 py-3 font-medium" th:text="${s.matricule}"></td>
+                <td class="px-4 py-3" th:text="${s.lastName + ' ' + s.firstName}"></td>
+                <td class="px-4 py-3 text-slate-600" th:text="${s.email}"></td>
+                <td class="px-4 py-3 text-slate-600" th:text="${s.classGroupId}"></td>
+
+                <td class="px-4 py-3 text-right">
+                    <button type="button"
+                            data-open="viewStudentModal"
+                            th:attr="
+                              data-id=${s.id},
+                              data-matricule=${s.matricule},
+                              data-firstname=${s.firstName},
+                              data-lastname=${s.lastName},
+                              data-email=${s.email},
+                              data-entryyear=${s.entryYear},
+                              data-classgroupid=${s.classGroupId}
+                            "
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                        View
+                    </button>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(students)}" class="border-t">
+                <td colspan="5" class="px-4 py-4 text-slate-500">No students yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================= -->
+    <!-- CREATE MODAL -->
+    <!-- ========================= -->
+    <div id="createStudentModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="createStudentModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-2xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <div>
+                        <h2 class="text-lg font-bold">Create Student</h2>
+                        <p class="text-sm text-slate-500">Add a new student profile.</p>
+                    </div>
+                    <button type="button" data-close="createStudentModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                        ✕
+                    </button>
+                </div>
+
+                <form th:action="@{/admin/students}" method="post"
+                      th:object="${student}"
+                      class="p-5 space-y-4">
+
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div>
+                        <label class="text-sm font-medium">Matricule</label>
+                        <input th:field="*{matricule}" required
+                               class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">First name</label>
+                            <input th:field="*{firstName}" required
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Last name</label>
+                            <input th:field="*{lastName}" required
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="text-sm font-medium">Email</label>
+                            <input th:field="*{email}" type="email"
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium">Entry Year</label>
+                            <input th:field="*{entryYear}" type="number"
+                                   class="mt-1 w-full rounded-xl border px-3 py-2"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium">Class Group</label>
+                        <select th:field="*{classGroupId}" class="mt-1 w-full rounded-xl border px-3 py-2">
+                            <option value="">-- none --</option>
+                            <option th:each="cg : ${classGroups}"
+                                    th:value="${cg.id}"
+                                    th:text="${cg.name != null ? cg.name : cg.id}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" data-close="createStudentModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                            Cancel
+                        </button>
+                        <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                            Save
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- VIEW MODAL -->
+    <!-- ========================= -->
+    <div id="viewStudentModal" class="fixed inset-0 z-50 hidden">
+        <div data-close="viewStudentModal" class="absolute inset-0 bg-black/40"></div>
+
+        <div class="relative mx-auto mt-24 w-[92%] max-w-3xl">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div class="flex items-start justify-between gap-4 border-b px-5 py-4">
+                    <div>
+                        <h2 id="v_name" class="text-lg font-bold">Student</h2>
+                        <p class="text-slate-500">
+                            Matricule: <span id="v_matricule" class="font-medium text-slate-700"></span>
+                        </p>
+                    </div>
+                    <button type="button" data-close="viewStudentModal"
+                            class="rounded-lg border px-3 py-1.5 hover:bg-slate-50">
+                        ✕
+                    </button>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-2">
+                        <p><span class="text-slate-500">Email:</span> <span id="v_email"></span></p>
+                        <p><span class="text-slate-500">Entry year:</span> <span id="v_entryYear"></span></p>
+                        <p><span class="text-slate-500">ClassGroup:</span> <span id="v_classGroupId"></span></p>
+                    </div>
+
+                    <!-- Assign class group -->
+                    <form id="assignForm"
+                          class="rounded-2xl border border-slate-200 bg-white p-5"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                        <label class="text-sm font-medium">Assign Class Group</label>
+                        <div class="mt-2 flex gap-2">
+                            <select id="v_selectClassGroup" name="classGroupId" class="w-full rounded-xl border px-3 py-2">
+                                <option value="">-- none --</option>
+                                <option th:each="cg : ${classGroups}"
+                                        th:value="${cg.id}"
+                                        th:text="${cg.name != null ? cg.name : cg.id}">
+                                </option>
+                            </select>
+
+                            <button class="rounded-xl bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="flex justify-end">
+                        <button type="button" data-close="viewStudentModal"
+                                class="rounded-xl border px-4 py-2 font-semibold hover:bg-slate-50">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- MODAL JS -->
+    <!-- ========================= -->
+    <script>
+        // open/close helpers
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // open buttons
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-open]');
+            if (!btn) return;
+
+            const modalId = btn.getAttribute('data-open');
+
+            // if view modal -> fill data
+            if (modalId === 'viewStudentModal') {
+                const id = btn.getAttribute('data-id') || '';
+                const matricule = btn.getAttribute('data-matricule') || '';
+                const firstName = btn.getAttribute('data-firstname') || '';
+                const lastName = btn.getAttribute('data-lastname') || '';
+                const email = btn.getAttribute('data-email') || '';
+                const entryYear = btn.getAttribute('data-entryyear') || '';
+                const classGroupId = btn.getAttribute('data-classgroupid') || '';
+
+                document.getElementById('v_name').textContent = (lastName + ' ' + firstName).trim() || 'Student';
+                document.getElementById('v_matricule').textContent = matricule;
+                document.getElementById('v_email').textContent = email;
+                document.getElementById('v_entryYear').textContent = entryYear;
+                document.getElementById('v_classGroupId').textContent = classGroupId;
+
+                // set form action dynamically
+                const assignForm = document.getElementById('assignForm');
+                assignForm.setAttribute('action', '/admin/students/' + id + '/assign-class');
+
+                // select current class group
+                const select = document.getElementById('v_selectClassGroup');
+                if (select) {
+                    select.value = classGroupId || '';
+                }
+            }
+
+            openModal(modalId);
+        });
+
+        // close buttons / backdrop
+        document.addEventListener('click', (e) => {
+            const closeBtn = e.target.closest('[data-close]');
+            if (!closeBtn) return;
+            closeModal(closeBtn.getAttribute('data-close'));
+        });
+
+        // esc to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            closeModal('createStudentModal');
+            closeModal('viewStudentModal');
+        });
+
+        // auto open create modal if server-side validation error happens while creating
+        (function autoOpenOnError() {
+            const hasError = /*[[${error != null}]]*/ false;
+            if (hasError) openModal('createStudentModal');
+        })();
+    </script>
+
+</section>
+</html>
