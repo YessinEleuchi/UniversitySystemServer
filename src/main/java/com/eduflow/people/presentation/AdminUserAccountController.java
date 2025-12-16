@@ -1,6 +1,8 @@
 package com.eduflow.people.presentation;
 
 import com.eduflow.people.domain.Role;
+import com.eduflow.people.domain.Student;
+import com.eduflow.people.domain.Teacher;
 import com.eduflow.people.repo.StudentRepository;
 import com.eduflow.people.repo.TeacherRepository;
 import com.eduflow.people.service.UserAccountService;
@@ -9,6 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.eduflow.notification.AccountEmailDispatcher;
+import com.eduflow.notification.AccountMailContext;
+import com.eduflow.people.domain.PersonType;
 
 import java.util.Set;
 
@@ -16,6 +21,9 @@ import java.util.Set;
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 public class AdminUserAccountController {
+
+    private final AccountEmailDispatcher accountEmailDispatcher;
+
 
     private final UserAccountService userAccountService;
     private final StudentRepository studentRepository;
@@ -46,26 +54,32 @@ public class AdminUserAccountController {
                                 @RequestParam(required = false) String password,
                                 RedirectAttributes ra) {
         try {
-            var res = userAccountService.createManagerAccount(
-                    username,
-                    password,                 // ✅ peut être vide => généré
-                    Set.of(Role.ROLE_MANAGER)
-            );
+            var res = userAccountService.createManagerAccount(username, password, Set.of(Role.ROLE_MANAGER));
 
+            // ✅ envoyer mail seulement si un password a été généré
             if (res.generatedPassword() != null) {
+                trySendMail(new AccountMailContext(
+                        res.account().getUsername(),
+                        res.account().getUsername(),
+                        res.generatedPassword(),
+                        null,
+                        "Manager",
+                        "http://localhost:8080/login"
+                ), ra);
+
                 ra.addFlashAttribute("generatedPassword",
-                        "Password generated for " + res.account().getUsername() + ": " + res.generatedPassword());
+                        "Password generated and emailed to " + res.account().getUsername());
             } else {
-                ra.addFlashAttribute("success",
-                        "Manager created: " + res.account().getUsername());
+                ra.addFlashAttribute("success", "Manager created: " + res.account().getUsername());
             }
 
             return "redirect:/admin/users";
         } catch (RuntimeException e) {
             ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/users/managers/new";
+            return "redirect:/admin/users";
         }
     }
+
 
     // ➕ CREATE STUDENT ACCOUNT
     @GetMapping("/students/new")
@@ -83,19 +97,36 @@ public class AdminUserAccountController {
             var res = userAccountService.createStudentAccount(username, password, studentId);
 
             if (res.generatedPassword() != null) {
-                ra.addFlashAttribute("generatedPassword",
-                        "Password generated for " + res.account().getUsername() + ": " + res.generatedPassword());
-            } else {
+                // récupère student pour displayName + email réel
+                Student s = studentRepository.findById(studentId)
+                        .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
+
+                String to = (s.getEmail() != null && s.getEmail().contains("@"))
+                        ? s.getEmail()
+                        : res.account().getUsername(); // fallback
+
+                trySendMail(new AccountMailContext(
+                        to,
+                        res.account().getUsername(),
+                        res.generatedPassword(),
+                        PersonType.STUDENT,
+                        s.getLastName() + " " + s.getFirstName(),
+                        "http://localhost:8080/login"
+                ), ra);
+
                 ra.addFlashAttribute("success",
-                        "Student account created: " + res.account().getUsername());
+                        "Student account created + password emailed to: " + to);
+            } else {
+                ra.addFlashAttribute("success", "Student account created: " + res.account().getUsername());
             }
 
             return "redirect:/admin/users";
         } catch (RuntimeException e) {
             ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/users/students/new";
+            return "redirect:/admin/users";
         }
     }
+
 
     // ➕ CREATE TEACHER ACCOUNT
     @GetMapping("/teachers/new")
@@ -113,19 +144,36 @@ public class AdminUserAccountController {
             var res = userAccountService.createTeacherAccount(username, password, teacherId);
 
             if (res.generatedPassword() != null) {
-                ra.addFlashAttribute("generatedPassword",
-                        "Password generated for " + res.account().getUsername() + ": " + res.generatedPassword());
-            } else {
+                Teacher t = teacherRepository.findById(teacherId)
+                        .orElseThrow(() -> new IllegalArgumentException("Teacher not found: " + teacherId));
+
+                String to = (t.getEmail() != null && t.getEmail().contains("@"))
+                        ? t.getEmail()
+                        : res.account().getUsername();
+
+                trySendMail(new AccountMailContext(
+                        to,
+                        res.account().getUsername(),
+                        res.generatedPassword(),
+                        PersonType.TEACHER,
+                        t.getLastName() + " " + t.getFirstName(),
+                        "http://localhost:8080/login"
+                ), ra);
+
+
                 ra.addFlashAttribute("success",
-                        "Teacher account created: " + res.account().getUsername());
+                        "Teacher account created + password emailed to: " + to);
+            } else {
+                ra.addFlashAttribute("success", "Teacher account created: " + res.account().getUsername());
             }
 
             return "redirect:/admin/users";
         } catch (RuntimeException e) {
             ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/users/teachers/new";
+            return "redirect:/admin/users";
         }
     }
+
 
     // 🔒 ENABLE / DISABLE
     @PostMapping("/{username}/enable")
@@ -154,4 +202,14 @@ public class AdminUserAccountController {
         }
         return "redirect:/admin/users";
     }
+    private void trySendMail(AccountMailContext ctx, RedirectAttributes ra) {
+        try {
+            accountEmailDispatcher.sendAccountCreated(ctx);
+        } catch (Exception mailEx) {
+            // ✅ ne casse pas l'admin, on informe seulement
+            ra.addFlashAttribute("warning",
+                    "Account created, but email failed: " + mailEx.getMessage());
+        }
+    }
+
 }
