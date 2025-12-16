@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Login - EduFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+
+<div class="w-full max-w-md bg-white rounded-2xl shadow p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Admin Login</h1>
+        <p class="text-gray-500 mt-1">Connecte-toi pour accéder au dashboard.</p>
+    </div>
+
+    <div th:if="${error}" class="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
+        Identifiants invalides. Réessaie.
+    </div>
+
+    <div th:if="${logout}" class="mb-4 p-3 rounded-lg bg-green-50 text-green-700 text-sm">
+        Déconnexion réussie.
+    </div>
+
+    <form th:action="@{/admin/login}" method="post" class="space-y-4">
+        <!-- CSRF -->
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Username</label>
+            <input name="username" type="text" required
+                   class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+            <input name="password" type="password" required
+                   class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+
+        <button type="submit"
+                class="w-full rounded-xl bg-blue-600 text-white py-2 font-semibold hover:bg-blue-700 transition">
+            Se connecter
+        </button>
+    </form>
+</div>
+
+</body>
+</html>
