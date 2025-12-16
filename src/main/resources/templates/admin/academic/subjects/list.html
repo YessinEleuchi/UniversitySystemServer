@@ -1,39 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Subjects - UniFlow</title>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Subjects')}">
 
-    <!-- Tailwind CDN (dev/simple) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="min-h-screen bg-slate-50 text-slate-900">
-
-<!-- Navbar -->
-<nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <a class="flex items-center gap-2 font-semibold text-slate-900" th:href="@{/admin}">
-            <svg class="h-5 w-5 text-indigo-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3Zm-6.5 9.2V16c0 1.66 3.13 3 7 3s7-1.34 7-3v-3.8l-7 3.8-7-3.8Z"/>
-            </svg>
-            <span>UniFlow Admin</span>
-        </a>
-
-        <div class="flex items-center gap-2">
-            <a th:href="@{/admin/cycles}"
-               class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M4 7a2 2 0 0 1 2-2h3v4H4V7Zm0 10v-2h5v4H6a2 2 0 0 1-2-2Zm16-2v2a2 2 0 0 1-2 2h-3v-4h5Zm0-8h-5V5h3a2 2 0 0 1 2 2v2ZM11 5h2v14h-2V5Z"/>
-                </svg>
-                Cycles
-            </a>
-        </div>
-    </div>
-</nav>
-
-<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+<main th:fragment="content">
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4 text-sm">
@@ -100,8 +69,8 @@
                 <tbody class="divide-y divide-slate-100">
                 <tr th:each="sub : ${subjects}" class="hover:bg-slate-50">
                     <td class="px-4 py-3">
-            <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200"
-                  th:text="${sub.code}">CS101</span>
+                        <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200"
+                              th:text="${sub.code}">CS101</span>
                     </td>
 
                     <td class="px-4 py-3">
@@ -120,10 +89,10 @@
                             <button type="button"
                                     class="inline-flex items-center gap-2 rounded-md bg-amber-500 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-600"
                                     th:attr="data-id=${sub.id},
-                               data-code=${sub.code},
-                               data-title=${sub.title},
-                               data-credits=${sub.credits},
-                               data-coeff=${sub.coefficient}"
+                                             data-code=${sub.code},
+                                             data-title=${sub.title},
+                                             data-credits=${sub.credits},
+                                             data-coeff=${sub.coefficient}"
                                     onclick="openEditSubjectModal(this)">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M16.862 3.487a2.25 2.25 0 0 1 3.182 3.182L8.25 18.463 3 19.75l1.287-5.25L16.862 3.487ZM6.03 15.98l-.57 2.32 2.32-.57L18.9 6.61l-1.75-1.75L6.03 15.98Z"/>
@@ -181,175 +150,175 @@
         </a>
     </div>
 
-</main>
+    <!-- ===================== -->
+    <!-- Modal: Create Subject -->
+    <!-- ===================== -->
+    <div id="createSubjectModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/50" onclick="closeCreateSubjectModal()"></div>
 
-<!-- ===================== -->
-<!-- Modal: Create Subject -->
-<!-- ===================== -->
-<div id="createSubjectModal" class="fixed inset-0 z-[60] hidden">
-    <div class="absolute inset-0 bg-slate-900/50" onclick="closeCreateSubjectModal()"></div>
-
-    <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
-        <form th:action="@{/admin/academic/semesters/{id}/subjects(id=${semester.id})}" method="post">
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                <h3 class="text-base font-semibold">New Subject</h3>
-                <button type="button" class="rounded-md p-2 hover:bg-slate-100" onclick="closeCreateSubjectModal()" aria-label="Close">
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
-                </button>
-            </div>
-
-            <div class="space-y-4 px-5 py-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700">Code</label>
-                    <input id="createSubjectCode" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                           name="code" required placeholder="CS101" />
+        <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
+            <form th:action="@{/admin/academic/semesters/{id}/subjects(id=${semester.id})}" method="post">
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h3 class="text-base font-semibold">New Subject</h3>
+                    <button type="button" class="rounded-md p-2 hover:bg-slate-100" onclick="closeCreateSubjectModal()" aria-label="Close">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+                    </button>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-700">Title</label>
-                    <input id="createSubjectTitle" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                           name="title" required placeholder="Programming" />
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="space-y-4 px-5 py-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700">Credits</label>
-                        <input id="createSubjectCredits"
+                        <label class="block text-sm font-medium text-slate-700">Code</label>
+                        <input id="createSubjectCode"
                                class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                               name="credits" type="number" min="0" step="1" placeholder="3" />
+                               name="code" required placeholder="CS101" />
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium text-slate-700">Coefficient</label>
-                        <input id="createSubjectCoeff"
+                        <label class="block text-sm font-medium text-slate-700">Title</label>
+                        <input id="createSubjectTitle"
                                class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                               name="coefficient" type="number" min="0" step="0.5" placeholder="1.5" />
+                               name="title" required placeholder="Programming" />
                     </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Credits</label>
+                            <input id="createSubjectCredits"
+                                   class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                   name="credits" type="number" min="0" step="1" placeholder="3" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Coefficient</label>
+                            <input id="createSubjectCoeff"
+                                   class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                   name="coefficient" type="number" min="0" step="0.5" placeholder="1.5" />
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="semesterId" th:value="${semester.id}" />
                 </div>
 
-                <input type="hidden" name="semesterId" th:value="${semester.id}" />
-            </div>
-
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
-                <button type="button"
-                        class="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                        onclick="closeCreateSubjectModal()">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                    Create
-                </button>
-            </div>
-        </form>
+                <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
+                    <button type="button"
+                            class="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            onclick="closeCreateSubjectModal()">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                        Create
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- ===================== -->
-<!-- Modal: Edit Subject -->
-<!-- ===================== -->
-<div id="editSubjectModal" class="fixed inset-0 z-[60] hidden">
-    <div class="absolute inset-0 bg-slate-900/50" onclick="closeEditSubjectModal()"></div>
+    <!-- ===================== -->
+    <!-- Modal: Edit Subject -->
+    <!-- ===================== -->
+    <div id="editSubjectModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/50" onclick="closeEditSubjectModal()"></div>
 
-    <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
-        <form id="editSubjectForm" method="post">
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                <h3 class="text-base font-semibold">Edit Subject</h3>
-                <button type="button" class="rounded-md p-2 hover:bg-slate-100" onclick="closeEditSubjectModal()" aria-label="Close">
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
-                </button>
-            </div>
-
-            <div class="space-y-4 px-5 py-4">
-                <input type="hidden" id="editSubjectId" name="id" />
-                <input type="hidden" name="semesterId" th:value="${semester.id}" />
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-700">Code</label>
-                    <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                           id="editSubjectCode" name="code" required />
+        <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
+            <form id="editSubjectForm" method="post">
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h3 class="text-base font-semibold">Edit Subject</h3>
+                    <button type="button" class="rounded-md p-2 hover:bg-slate-100" onclick="closeEditSubjectModal()" aria-label="Close">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+                    </button>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-700">Title</label>
-                    <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                           id="editSubjectTitle" name="title" required />
-                </div>
+                <div class="space-y-4 px-5 py-4">
+                    <input type="hidden" id="editSubjectId" name="id" />
+                    <input type="hidden" name="semesterId" th:value="${semester.id}" />
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700">Credits</label>
+                        <label class="block text-sm font-medium text-slate-700">Code</label>
                         <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                               id="editSubjectCredits" name="credits" type="number" min="0" step="1" />
+                               id="editSubjectCode" name="code" required />
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium text-slate-700">Coefficient</label>
+                        <label class="block text-sm font-medium text-slate-700">Title</label>
                         <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                               id="editSubjectCoeff" name="coefficient" type="number" min="0" step="0.5" />
+                               id="editSubjectTitle" name="title" required />
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Credits</label>
+                            <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                   id="editSubjectCredits" name="credits" type="number" min="0" step="1" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Coefficient</label>
+                            <input class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                   id="editSubjectCoeff" name="coefficient" type="number" min="0" step="0.5" />
+                        </div>
+                    </div>
+
+                    <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        Editing id: <b id="editSubjectIdText">-</b>
                     </div>
                 </div>
 
-                <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                    Editing id: <b id="editSubjectIdText">-</b>
+                <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
+                    <button type="button"
+                            class="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            onclick="closeEditSubjectModal()">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                        Update
+                    </button>
                 </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
-                <button type="button"
-                        class="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                        onclick="closeEditSubjectModal()">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-                    Update
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-    // Create
-    function openCreateSubjectModal() {
-        document.getElementById('createSubjectCode').value = '';
-        document.getElementById('createSubjectTitle').value = '';
-        document.getElementById('createSubjectCredits').value = '';
-        document.getElementById('createSubjectCoeff').value = '';
-        document.getElementById('createSubjectModal').classList.remove('hidden');
-    }
-    function closeCreateSubjectModal() {
-        document.getElementById('createSubjectModal').classList.add('hidden');
-    }
-
-    // Edit
-    function openEditSubjectModal(btn) {
-        const id = btn.getAttribute('data-id');
-        const code = btn.getAttribute('data-code');
-        const title = btn.getAttribute('data-title');
-        const credits = btn.getAttribute('data-credits');
-        const coeff = btn.getAttribute('data-coeff');
-
-        document.getElementById('editSubjectId').value = id;
-        document.getElementById('editSubjectCode').value = code || '';
-        document.getElementById('editSubjectTitle').value = title || '';
-        document.getElementById('editSubjectCredits').value = (credits && credits !== 'null') ? credits : '';
-        document.getElementById('editSubjectCoeff').value = (coeff && coeff !== 'null') ? coeff : '';
-        document.getElementById('editSubjectIdText').textContent = id;
-
-        document.getElementById('editSubjectForm').action = '/admin/academic/subjects/' + id;
-        document.getElementById('editSubjectModal').classList.remove('hidden');
-    }
-    function closeEditSubjectModal() {
-        document.getElementById('editSubjectModal').classList.add('hidden');
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeCreateSubjectModal();
-            closeEditSubjectModal();
+    <script>
+        // Create
+        function openCreateSubjectModal() {
+            document.getElementById('createSubjectCode').value = '';
+            document.getElementById('createSubjectTitle').value = '';
+            document.getElementById('createSubjectCredits').value = '';
+            document.getElementById('createSubjectCoeff').value = '';
+            document.getElementById('createSubjectModal').classList.remove('hidden');
         }
-    });
-</script>
+        function closeCreateSubjectModal() {
+            document.getElementById('createSubjectModal').classList.add('hidden');
+        }
 
-</body>
+        // Edit
+        function openEditSubjectModal(btn) {
+            const id = btn.getAttribute('data-id');
+            const code = btn.getAttribute('data-code');
+            const title = btn.getAttribute('data-title');
+            const credits = btn.getAttribute('data-credits');
+            const coeff = btn.getAttribute('data-coeff');
+
+            document.getElementById('editSubjectId').value = id;
+            document.getElementById('editSubjectCode').value = code || '';
+            document.getElementById('editSubjectTitle').value = title || '';
+            document.getElementById('editSubjectCredits').value = (credits && credits !== 'null') ? credits : '';
+            document.getElementById('editSubjectCoeff').value = (coeff && coeff !== 'null') ? coeff : '';
+            document.getElementById('editSubjectIdText').textContent = id;
+
+            document.getElementById('editSubjectForm').action = '/admin/academic/subjects/' + id;
+            document.getElementById('editSubjectModal').classList.remove('hidden');
+        }
+        function closeEditSubjectModal() {
+            document.getElementById('editSubjectModal').classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCreateSubjectModal();
+                closeEditSubjectModal();
+            }
+        });
+    </script>
+
+</main>
 </html>

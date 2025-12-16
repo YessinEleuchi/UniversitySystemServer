@@ -2,75 +2,64 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- ✅ Messages (Tailwind) -->
+<!-- ✅ Messages -->
 <div th:fragment="messages" class="space-y-3">
+
     <!-- Success -->
     <div th:if="${successMessage}"
+         role="alert"
          class="relative flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">
-        <svg class="mt-0.5 h-5 w-5 flex-none text-emerald-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+
+        <svg class="mt-0.5 h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"/>
         </svg>
 
         <p class="text-sm font-medium" th:text="${successMessage}"></p>
 
-        <!-- Close (JS simple) -->
         <button type="button"
-                class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 onclick="this.closest('[role=alert]').remove()"
-                aria-label="Close">
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-            </svg>
+                class="ml-auto h-8 w-8 rounded-md hover:bg-emerald-100">
+            ✕
         </button>
     </div>
 
     <!-- Error -->
     <div th:if="${errorMessage}"
-         class="relative flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-900"
-         role="alert">
-        <svg class="mt-0.5 h-5 w-5 flex-none text-rose-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-9.5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 8.5zm0-3a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+         role="alert"
+         class="relative flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-900">
+
+        <svg class="mt-0.5 h-5 w-5 text-rose-600" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16z"
+                  clip-rule="evenodd"/>
         </svg>
 
         <p class="text-sm font-medium" th:text="${errorMessage}"></p>
 
         <button type="button"
-                class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
                 onclick="this.closest('[role=alert]').remove()"
-                aria-label="Close">
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-            </svg>
+                class="ml-auto h-8 w-8 rounded-md hover:bg-rose-100">
+            ✕
         </button>
     </div>
+
 </div>
 
-
-<!-- ✅ Breadcrumb (Tailwind) -->
+<!-- ✅ Breadcrumb -->
 <div th:fragment="breadcrumb" class="py-3">
-    <nav aria-label="breadcrumb" class="text-sm">
-        <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600">
-            <!-- Root -->
-            <li>
-                <a href="/admin/cycles" class="hover:text-slate-900 hover:underline">Cycles</a>
-            </li>
-
-            <!-- Separator after root -->
+    <nav class="text-sm">
+        <ol class="flex items-center gap-2 text-slate-600">
+            <li><a href="/admin/dashboard" class="hover:underline">Dashboard</a></li>
             <li class="text-slate-400">/</li>
 
-            <!-- Dynamic items -->
-            <li th:each="item, iter : ${breadcrumb}" class="flex items-center gap-x-2">
-                <a th:if="${!item.active}"
-                   th:href="${item.url}"
-                   th:text="${item.label}"
-                   class="hover:text-slate-900 hover:underline"></a>
-
-                <span th:if="${item.active}"
-                      th:text="${item.label}"
-                      class="font-semibold text-slate-900"></span>
-
-                <!-- Separator (except last) -->
-                <span th:if="${!iter.last}" class="text-slate-400">/</span>
+            <li th:each="item,iter : ${breadcrumb}">
+                <span th:if="${item.active}" class="font-semibold text-slate-900"
+                      th:text="${item.label}"></span>
+                <a th:if="${!item.active}" th:href="${item.url}"
+                   th:text="${item.label}" class="hover:underline"></a>
+                <span th:if="${!iter.last}" class="mx-2 text-slate-400">/</span>
             </li>
         </ol>
     </nav>
