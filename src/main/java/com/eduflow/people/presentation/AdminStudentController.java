@@ -16,33 +16,35 @@ public class AdminStudentController {
     private final StudentService studentService;
     private final ClassGroupRepository classGroupRepository;
 
-    // 📄 LIST
     @GetMapping
     public String list(Model model) {
-        model.addAttribute("students", studentService.getStudentsByClassGroup(null));
-        return "admin/students/list";
-    }
-
-    // ➕ FORM CREATE
-    @GetMapping("/new")
-    public String createForm(Model model) {
+        model.addAttribute("students", studentService.getAllStudents());
         model.addAttribute("student", new Student());
         model.addAttribute("classGroups", classGroupRepository.findAll());
-        return "admin/students/form";
+        return "admin/users/students/list";
     }
 
-    // 💾 SAVE
     @PostMapping
-    public String create(@ModelAttribute Student student) {
-        studentService.createStudent(student);
-        return "redirect:/admin/students";
+    public String create(@ModelAttribute Student student, Model model) {
+        try {
+            studentService.createStudent(student);
+            return "redirect:/admin/students";
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            model.addAttribute("students", studentService.getAllStudents());
+            model.addAttribute("student", student);
+            model.addAttribute("classGroups", classGroupRepository.findAll());
+            model.addAttribute("error", e.getMessage());
+            return "admin/users/students/list";
+        }
     }
+
 
     // 👁️ VIEW
     @GetMapping("/{id}")
     public String view(@PathVariable String id, Model model) {
         model.addAttribute("student", studentService.getStudent(id));
-        return "admin/students/view";
+        model.addAttribute("classGroups", classGroupRepository.findAll());
+        return "admin/users/students/view";
     }
 
     // 🔄 ASSIGN CLASS

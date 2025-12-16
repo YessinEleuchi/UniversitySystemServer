@@ -14,40 +14,26 @@ public class AdminTeacherController {
 
     private final TeacherService teacherService;
 
-    // 📄 LIST
+    // 📄 LIST (ONE PAGE: list + modals)
     @GetMapping
     public String list(Model model) {
         model.addAttribute("teachers", teacherService.getAllTeachers());
-        return "admin/teachers/list";
+        model.addAttribute("teacher", new Teacher()); // ✅ required for create modal form
+        return "admin/users/teachers/list";
     }
 
-    // ➕ FORM CREATE
-    @GetMapping("/new")
-    public String createForm(Model model) {
-        model.addAttribute("teacher", new Teacher());
-        return "admin/teachers/form";
-    }
-
-    // 💾 SAVE
+    // 💾 SAVE (Create Teacher)
     @PostMapping
     public String create(@ModelAttribute Teacher teacher) {
         teacherService.createTeacher(teacher);
         return "redirect:/admin/teachers";
     }
 
-    // 👁️ VIEW
-    @GetMapping("/{id}")
-    public String view(@PathVariable String id, Model model) {
-        model.addAttribute("teacher", teacherService.getTeacher(id));
-        model.addAttribute("teachingLoad", teacherService.getTeachingLoad(id));
-        return "admin/teachers/view";
-    }
-
-    // ✏️ UPDATE DEPARTMENT
+    // ✏️ UPDATE DEPARTMENT (from view modal)
     @PostMapping("/{id}/department")
     public String updateDepartment(@PathVariable String id,
                                    @RequestParam String department) {
         teacherService.updateTeacherDepartment(id, department);
-        return "redirect:/admin/teachers/" + id;
+        return "redirect:/admin/teachers"; // ✅ back to list page (since view is modal)
     }
 }
