@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import java.util.List;
 
 import java.time.Instant;
 import java.util.Set;
@@ -174,5 +175,15 @@ public class UserAccountService {
         if (isManager) {
             // ok
         }
+
+
+
+
+    }
+    public List<UserAccount> getAllByRole(Role role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role is required");
+        }
+        return userRepo.findByRolesContainingOrderByUsernameAsc(role);
     }
 }
