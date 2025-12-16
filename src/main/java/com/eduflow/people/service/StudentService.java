@@ -73,4 +73,8 @@ public class StudentService {
         if (!StringUtils.hasText(student.getFirstName()) || !StringUtils.hasText(student.getLastName()))
             throw new IllegalArgumentException("First name and last name are required");
     }
+    public List<Student> getAllStudents() {
+        return studentRepository.findAllByOrderByLastNameAscFirstNameAsc();
+    }
+
 }

@@ -8,6 +8,7 @@ import com.eduflow.people.domain.UserAccount;
 import com.eduflow.people.repo.StudentRepository;
 import com.eduflow.people.repo.TeacherRepository;
 import com.eduflow.people.repo.UserAccountRepository;
+import com.eduflow.security.PasswordGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,12 +28,15 @@ public class UserAccountService {
     private final StudentRepository studentRepo;
     private final TeacherRepository teacherRepo;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordGeneratorService passwordGeneratorService;
+    public record AccountCreationResult(UserAccount account, String generatedPassword) {}
+
 
     // -------------------------
     // CREATE ACCOUNTS
     // -------------------------
 
-    public UserAccount createManagerAccount(String username, String rawPassword, Set<Role> roles) {
+    public AccountCreationResult createManagerAccount(String username, String rawPassword, Set<Role> roles) {
         if (roles == null || roles.isEmpty())
             throw new IllegalArgumentException("At least one role is required");
         if (!(roles.contains(Role.ROLE_MANAGER) || roles.contains(Role.ROLE_SUPER_ADMIN)))
@@ -41,38 +45,27 @@ public class UserAccountService {
         return createBase(username, rawPassword, roles, null, null);
     }
 
-    public UserAccount createStudentAccount(String username, String rawPassword, String studentId) {
+    public AccountCreationResult createStudentAccount(String username, String rawPassword, String studentId) {
         Student student = studentRepo.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
 
-        UserAccount ua = createBase(username, rawPassword, Set.of(Role.ROLE_STUDENT), student.getId(), PersonType.STUDENT);
-
-
-        studentRepo.save(student);
-
-        return ua;
+        return createBase(username, rawPassword, Set.of(Role.ROLE_STUDENT), student.getId(), PersonType.STUDENT);
     }
 
-    public UserAccount createTeacherAccount(String username, String rawPassword, String teacherId) {
+    public AccountCreationResult createTeacherAccount(String username, String rawPassword, String teacherId) {
         Teacher teacher = teacherRepo.findById(teacherId)
                 .orElseThrow(() -> new IllegalArgumentException("Teacher not found: " + teacherId));
 
-        UserAccount ua = createBase(username, rawPassword, Set.of(Role.ROLE_TEACHER), teacher.getId(), PersonType.TEACHER);
-
-
-        teacherRepo.save(teacher);
-
-        return ua;
+        return createBase(username, rawPassword, Set.of(Role.ROLE_TEACHER), teacher.getId(), PersonType.TEACHER);
     }
 
-    private UserAccount createBase(String username,
-                                   String rawPassword,
-                                   Set<Role> roles,
-                                   String personId,
-                                   PersonType personType) {
+    private AccountCreationResult createBase(String username,
+                                             String rawPassword,
+                                             Set<Role> roles,
+                                             String personId,
+                                             PersonType personType) {
 
         String u = normalizeUsername(username);
-        validatePassword(rawPassword);
 
         if (userRepo.existsByUsernameIgnoreCase(u)) {
             throw new IllegalStateException("Username already used: " + u);
@@ -80,10 +73,21 @@ public class UserAccountService {
 
         validateRolePersonLink(roles, personId, personType);
 
+        // ✅ generate if empty
+        String generated = null;
+        String finalRawPassword = rawPassword;
+
+        if (!StringUtils.hasText(finalRawPassword)) {
+            generated = passwordGeneratorService.generate(12);
+            finalRawPassword = generated;
+        }
+
+        validatePassword(finalRawPassword);
+
         Instant now = Instant.now();
         UserAccount ua = UserAccount.builder()
                 .username(u)
-                .password(passwordEncoder.encode(rawPassword))
+                .password(passwordEncoder.encode(finalRawPassword))
                 .roles(roles)
                 .personId(personId)
                 .personType(personType)
@@ -93,7 +97,8 @@ public class UserAccountService {
                 .updatedAt(now)
                 .build();
 
-        return userRepo.save(ua);
+        UserAccount saved = userRepo.save(ua);
+        return new AccountCreationResult(saved, generated);
     }
 
     // -------------------------
@@ -175,10 +180,6 @@ public class UserAccountService {
         if (isManager) {
             // ok
         }
-
-
-
-
     }
     public List<UserAccount> getAllByRole(Role role) {
         if (role == null) {
