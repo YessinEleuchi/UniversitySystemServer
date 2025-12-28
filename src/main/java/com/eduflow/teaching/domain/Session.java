@@ -8,22 +8,25 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 
 @Document("sessions")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Session {
-
     @Id
     private String id;
 
     @Indexed
     private String courseInstanceId;
 
+    @Indexed
+    private String teacherId;
+
+    @Indexed
+    private String classGroupId;
+
+    @Indexed
+    private String roomId;
+
     private Instant startTime;
     private Instant endTime;
 
-    private String room;
-    private String type;   // Cours, TD, TP...
+    private String type;
 }

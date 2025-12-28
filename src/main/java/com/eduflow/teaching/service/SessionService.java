@@ -1,6 +1,7 @@
 package com.eduflow.teaching.service;
 
 import com.eduflow.teaching.domain.CourseInstance;
+import com.eduflow.teaching.repo.RoomRepository;
 import com.eduflow.teaching.domain.Session;
 import com.eduflow.teaching.repo.CourseInstanceRepository;
 import com.eduflow.teaching.repo.SessionRepository;
@@ -24,6 +25,7 @@ import java.util.List;
  * - Type autorisé : CM, TD, TP, EXAM, PROJECT, etc.
  * </p>
  */
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -31,135 +33,124 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final CourseInstanceRepository courseInstanceRepository;
+    private final RoomRepository roomRepository;
 
-    /**
-     * Crée une nouvelle séance de cours.
-     *
-     * @param courseInstanceId ID du cours ouvert
-     * @param start            Date/heure de début (UTC ou timezone géré côté front)
-     * @param end              Date/heure de fin
-     * @param room             Salle (ex: "A101", "Amphi B")
-     * @param type             Type de séance (CM, TD, TP, EXAM, etc.)
-     * @return Session persistée
-     * @throws IllegalArgumentException si données invalides
-     * @throws IllegalStateException    si conflit de planning
-     */
     public Session createSession(String courseInstanceId,
                                  Instant start,
                                  Instant end,
-                                 String room,
+                                 String roomId,
                                  String type) {
 
-        // 1. Vérification CourseInstance existe
         CourseInstance course = courseInstanceRepository.findById(courseInstanceId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Cours ouvert introuvable : " + courseInstanceId));
+                .orElseThrow(() -> new IllegalArgumentException("Cours ouvert introuvable : " + courseInstanceId));
 
-        // 2. Validations basiques
-        if (start == null || end == null || start.isAfter(end) || start.equals(end)) {
-            throw new IllegalArgumentException("Les dates de début/fin sont invalides");
-        }
+        validateTimeRange(start, end);
+        validateRequired(roomId, "La salle (roomId) est obligatoire");
+        validateRequired(type, "Le type de séance est obligatoire");
 
-        if (room == null || room.trim().isEmpty()) {
-            throw new IllegalArgumentException("La salle est obligatoire");
-        }
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Salle introuvable : " + roomId));
+        if (!room.isActive()) throw new IllegalStateException("Salle désactivée : " + room.getCode());
 
-        if (type == null || type.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le type de séance est obligatoire");
-        }
+        String teacherId = course.getTeacherId();
+        String classGroupId = course.getClassGroupId();
 
-        // 3. Vérification conflits de planning
-        checkNoRoomConflict(room, start, end, null);
-        checkNoTeacherConflict(course.getTeacherId(), start, end, null);
-        checkNoClassGroupConflict(course.getClassGroupId(), start, end, null);
+        validateRequired(teacherId, "CourseInstance sans teacherId");
+        validateRequired(classGroupId, "CourseInstance sans classGroupId");
 
-        // 4. Création
+        // ✅ checks via méthodes privées (create => exclude=null)
+        checkNoRoomConflict(roomId, start, end, null);
+        checkNoTeacherConflict(teacherId, start, end, null);
+        checkNoClassGroupConflict(classGroupId, start, end, null);
+
         Session session = Session.builder()
                 .courseInstanceId(courseInstanceId)
+                .teacherId(teacherId)
+                .classGroupId(classGroupId)
+                .roomId(roomId)
                 .startTime(start)
                 .endTime(end)
-                .room(room)
-                .type(type.toUpperCase())
+                .type(type.trim().toUpperCase())
                 .build();
 
         return sessionRepository.save(session);
     }
 
-    /**
-     * Liste toutes les séances d'un cours ouvert.
-     */
-    public List<Session> getSessionsForCourse(String courseInstanceId) {
-        return sessionRepository.findByCourseInstanceIdOrderByStartTimeAsc(courseInstanceId);
-    }
-
-    /**
-     * Planning d'un enseignant (toutes ses séances).
-     */
-    public List<Session> getSessionsForTeacher(String teacherId) {
-        return sessionRepository.findByTeacherId(teacherId);
-    }
-
-    /**
-     * Planning d'une salle.
-     */
-    public List<Session> getSessionsForRoom(String room) {
-        return sessionRepository.findByRoomOrderByStartTimeAsc(room);
-    }
-
-    /**
-     * Planning d'une classe (via ClassGroup).
-     */
-    public List<Session> getSessionsForClassGroup(String classGroupId) {
-        return sessionRepository.findByClassGroupId(classGroupId);
-    }
-
-
-
-    // ========================================================================
-    // MÉTHODES PRIVÉES DE VÉRIFICATION DE CONFLITS
-    // ========================================================================
-
-    private void checkNoRoomConflict(String room, Instant start, Instant end, String excludeSessionId) {
-        boolean conflict = sessionRepository.existsByRoomAndTimeOverlap(room, start, end, excludeSessionId);
-        if (conflict) {
-            throw new IllegalStateException("La salle '" + room + "' est déjà occupée à ce créneau");
-        }
-    }
-
-    private void checkNoTeacherConflict(String teacherId, Instant start, Instant end, String excludeSessionId) {
-        boolean conflict = sessionRepository.existsByTeacherAndTimeOverlap(teacherId, start, end, excludeSessionId);
-        if (conflict) {
-            throw new IllegalStateException("L'enseignant est déjà occupé à ce créneau");
-        }
-    }
-
-    private void checkNoClassGroupConflict(String classGroupId, Instant start, Instant end, String excludeSessionId) {
-        boolean conflict = sessionRepository.existsByClassGroupAndTimeOverlap(classGroupId, start, end, excludeSessionId);
-        if (conflict) {
-            throw new IllegalStateException("La classe a déjà un cours prévu à ce créneau");
-        }
-    }
-
-    // ========================================================================
-    // MISE À JOUR & SUPPRESSION (bonus)
-    // ========================================================================
-
-    public Session updateSession(String sessionId, Instant start, Instant end, String room, String type) {
+    public Session updateSession(String sessionId, Instant start, Instant end, String roomId, String type) {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Séance introuvable : " + sessionId));
 
-        checkNoRoomConflict(room, start, end, sessionId);
-        // réutilise les mêmes checks avec excludeSessionId
+        validateTimeRange(start, end);
+        validateRequired(roomId, "La salle (roomId) est obligatoire");
+        validateRequired(type, "Le type de séance est obligatoire");
+
+        var room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Salle introuvable : " + roomId));
+        if (!room.isActive()) throw new IllegalStateException("Salle désactivée : " + room.getCode());
+
+        // ✅ update => exclude=sessionId
+        checkNoRoomConflict(roomId, start, end, sessionId);
+        checkNoTeacherConflict(session.getTeacherId(), start, end, sessionId);
+        checkNoClassGroupConflict(session.getClassGroupId(), start, end, sessionId);
 
         session.setStartTime(start);
         session.setEndTime(end);
-        session.setRoom(room);
-        session.setType(type.toUpperCase());
+        session.setRoomId(roomId);
+        session.setType(type.trim().toUpperCase());
 
         return sessionRepository.save(session);
     }
 
+    public List<Session> getSessionsForRoom(String roomId) {
+        return sessionRepository.findByRoomIdOrderByStartTimeAsc(roomId);
+    }
+
     public void deleteSession(String sessionId) {
         sessionRepository.deleteById(sessionId);
+    }
+
+    // --------------------------------------------------------------------
+    // VALIDATIONS
+    // --------------------------------------------------------------------
+    private static void validateTimeRange(Instant start, Instant end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Les dates de début et de fin sont obligatoires");
+        }
+        if (!end.isAfter(start)) {
+            throw new IllegalArgumentException("La date de fin doit être strictement après la date de début");
+        }
+    }
+
+    private static void validateRequired(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // CONFLICTS
+    // --------------------------------------------------------------------
+    private void checkNoRoomConflict(String roomId, Instant start, Instant end, String excludeSessionId) {
+        boolean conflict = (excludeSessionId == null)
+                ? sessionRepository.existsRoomOverlap(roomId, start, end)
+                : sessionRepository.existsRoomOverlapExcluding(roomId, start, end, excludeSessionId);
+
+        if (conflict) throw new IllegalStateException("La salle est déjà occupée à ce créneau");
+    }
+
+    private void checkNoTeacherConflict(String teacherId, Instant start, Instant end, String excludeSessionId) {
+        boolean conflict = (excludeSessionId == null)
+                ? sessionRepository.existsTeacherOverlap(teacherId, start, end)
+                : sessionRepository.existsTeacherOverlapExcluding(teacherId, start, end, excludeSessionId);
+
+        if (conflict) throw new IllegalStateException("L'enseignant est déjà occupé à ce créneau");
+    }
+
+    private void checkNoClassGroupConflict(String classGroupId, Instant start, Instant end, String excludeSessionId) {
+        boolean conflict = (excludeSessionId == null)
+                ? sessionRepository.existsClassGroupOverlap(classGroupId, start, end)
+                : sessionRepository.existsClassGroupOverlapExcluding(classGroupId, start, end, excludeSessionId);
+
+        if (conflict) throw new IllegalStateException("La classe a déjà un cours prévu à ce créneau");
     }
 }

@@ -9,27 +9,29 @@ import java.util.List;
 
 public interface SessionRepository extends MongoRepository<Session, String> {
 
-    List<Session> findByCourseInstanceId(String courseInstanceId);
-
     List<Session> findByCourseInstanceIdOrderByStartTimeAsc(String courseInstanceId);
+    List<Session> findByRoomIdOrderByStartTimeAsc(String roomId);
+    List<Session> findByTeacherIdOrderByStartTimeAsc(String teacherId);
+    List<Session> findByClassGroupIdOrderByStartTimeAsc(String classGroupId);
 
-    // === CONFLITS HORAIRES ===
-    @Query("{ 'room': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 }, '_id': { $ne: ?3 } }")
-    boolean existsByRoomAndTimeOverlap(String room, Instant start, Instant end, String excludeId);
+    // -------------------- ROOM --------------------
+    @Query(value = "{ 'roomId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsRoomOverlap(String roomId, Instant start, Instant end);
 
-    @Query("{ 'teacherId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 }, '_id': { $ne: ?3 } }")
-    boolean existsByTeacherAndTimeOverlap(String teacherId, Instant start, Instant end, String excludeId);
+    @Query(value = "{ '_id': { $ne: ?3 }, 'roomId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsRoomOverlapExcluding(String roomId, Instant start, Instant end, String excludeId);
 
-    @Query("{ 'classGroupId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 }, '_id': { $ne: ?3 } }")
-    boolean existsByClassGroupAndTimeOverlap(String classGroupId, Instant start, Instant end, String excludeId);
+    // -------------------- TEACHER --------------------
+    @Query(value = "{ 'teacherId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsTeacherOverlap(String teacherId, Instant start, Instant end);
 
-    // === PLANNINGS ===
-    @Query("{ 'teacherId': ?0 }")
-    List<Session> findByTeacherId(String teacherId);
+    @Query(value = "{ '_id': { $ne: ?3 }, 'teacherId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsTeacherOverlapExcluding(String teacherId, Instant start, Instant end, String excludeId);
 
-    List<Session> findByRoomOrderByStartTimeAsc(String room);
+    // -------------------- CLASS GROUP --------------------
+    @Query(value = "{ 'classGroupId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsClassGroupOverlap(String classGroupId, Instant start, Instant end);
 
-    @Query("{ 'classGroupId': ?0 }")
-    List<Session> findByClassGroupId(String classGroupId);
-
+    @Query(value = "{ '_id': { $ne: ?3 }, 'classGroupId': ?0, 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } }", exists = true)
+    boolean existsClassGroupOverlapExcluding(String classGroupId, Instant start, Instant end, String excludeId);
 }
