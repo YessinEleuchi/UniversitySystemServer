@@ -14,4 +14,8 @@ public interface SpecialityRepository extends MongoRepository<Speciality, String
     Optional<Speciality> findByCode(String code);
 
     boolean existsByCode(String code);
+    boolean existsByCycleIdAndCodeIgnoreCase(String cycleId, String code);
+    List<Speciality> findByCycleIdOrderByCodeAsc(String cycleId);
+
+    boolean existsByCycleIdAndLabelIgnoreCase(String cycleId, String label);
 }

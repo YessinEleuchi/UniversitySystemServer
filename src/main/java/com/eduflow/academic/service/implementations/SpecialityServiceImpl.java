@@ -24,9 +24,21 @@ public class SpecialityServiceImpl implements SpecialityService {
                 .orElseThrow(() -> new IllegalArgumentException("Cycle not found: " + cycleId));
 
         speciality.setCycleId(cycleId);
+        String code = speciality.getCode() == null ? null : speciality.getCode().trim().toUpperCase();
+        String label = speciality.getLabel() == null ? null : speciality.getLabel().trim();
 
-        if (speciality.getCode() != null && specialityRepository.existsByCode(speciality.getCode())) {
-            throw new IllegalStateException("Speciality with code " + speciality.getCode() + " already exists");
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException("Code is required");
+        }
+        if (label == null || label.isBlank()) {
+            throw new IllegalArgumentException("Label is required");
+        }
+        if (specialityRepository.existsByCycleIdAndCodeIgnoreCase(cycleId, code)) {
+            throw new IllegalStateException("Speciality code already exists in this cycle: " + code);
+        }
+
+        if (specialityRepository.existsByCycleIdAndLabelIgnoreCase(cycleId, label)) {
+            throw new IllegalStateException("Speciality label already exists in this cycle: " + label);
         }
 
         return specialityRepository.save(speciality);
