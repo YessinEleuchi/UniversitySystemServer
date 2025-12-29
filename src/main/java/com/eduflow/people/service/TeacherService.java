@@ -69,10 +69,7 @@ public class TeacherService {
         return teacherRepository.findTop10ByLastNameContainingIgnoreCaseOrFirstNameContainingIgnoreCase(q, q);
     }
 
-    public long getTeachingLoad(String teacherId) {
-        getTeacher(teacherId);
-        return courseInstanceRepository.countByTeacherId(teacherId);
-    }
+
 
     public List<Teacher> getAllTeachers() {
         return teacherRepository.findByOrderByLastNameAscFirstNameAsc();
