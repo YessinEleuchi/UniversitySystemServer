@@ -7,18 +7,16 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4 text-sm">
         <ol class="flex flex-wrap items-center gap-x-2 text-slate-600">
-            <li><a th:href="@{/admin/cycles}" class="hover:text-slate-900 hover:underline">Cycles</a></li>
-            <li class="text-slate-400">/</li>
-            <li class="text-slate-500">Speciality</li>
+            <li><a th:href="@{/admin/academic/cycles}" class="hover:text-slate-900 hover:underline">Cycles</a></li>
             <li class="text-slate-400">/</li>
             <li class="text-slate-500">Level</li>
             <li class="text-slate-400">/</li>
             <li>
-                <a th:href="@{/admin/academic/levels/{id}/semesters(id=${semester.levelId})}"
+                <a th:href="@{/admin/academic/levels/{id}/semesters(id=${level.id})}"
                    class="hover:text-slate-900 hover:underline">Semesters</a>
             </li>
             <li class="text-slate-400">/</li>
-            <li class="font-semibold text-slate-900" th:text="${semester.code}">Semester</li>
+            <li class="font-semibold text-slate-900" th:text="${semester.code}">S1</li>
         </ol>
     </nav>
 
@@ -108,6 +106,7 @@
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                         <path d="M9 3a1 1 0 0 0-1 1v1H5a1 1 0 1 0 0 2h1v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7h1a1 1 0 1 0 0-2h-3V4a1 1 0 0 0-1-1H9Zm1 2h4v0H10v0Zm-1 5a1 1 0 0 1 2 0v8a1 1 0 1 1-2 0v-8Zm6-1a1 1 0 1 0-2 0v8a1 1 0 1 0 2 0v-8Z"/>
                                     </svg>
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                     Delete
                                 </button>
                             </form>
@@ -141,7 +140,7 @@
 
     <!-- Back -->
     <div class="mt-4">
-        <a th:href="@{/admin/academic/levels/{id}/semesters(id=${semester.levelId})}"
+        <a th:href="@{/admin/academic/levels/{id}/semesters(id=${level.id})}"
            class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M10.7 19.7a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 1 1 1.4 1.4L6.4 11H20a1 1 0 1 1 0 2H6.4l4.3 4.3a1 1 0 0 1 0 1.4Z"/>
@@ -157,7 +156,9 @@
         <div class="absolute inset-0 bg-slate-900/50" onclick="closeCreateSubjectModal()"></div>
 
         <div class="relative mx-auto mt-20 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
-            <form th:action="@{/admin/academic/semesters/{id}/subjects(id=${semester.id})}" method="post">
+            <form th:action="@{/admin/academic/levels/{levelId}/semesters/{code}/subjects(levelId=${level.id},code=${semester.code})}"
+                  method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                     <h3 class="text-base font-semibold">New Subject</h3>
                     <button type="button" class="rounded-md p-2 hover:bg-slate-100" onclick="closeCreateSubjectModal()" aria-label="Close">
@@ -195,7 +196,8 @@
                         </div>
                     </div>
 
-                    <input type="hidden" name="semesterId" th:value="${semester.id}" />
+                    <input type="hidden" name="levelId" th:value="${level.id}" />
+                    <input type="hidden" name="semesterCode" th:value="${semester.code}" />
                 </div>
 
                 <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
@@ -230,7 +232,8 @@
 
                 <div class="space-y-4 px-5 py-4">
                     <input type="hidden" id="editSubjectId" name="id" />
-                    <input type="hidden" name="semesterId" th:value="${semester.id}" />
+                    <input type="hidden" name="levelId" th:value="${level.id}" />
+                    <input type="hidden" name="semesterCode" th:value="${semester.code}" />
 
                     <div>
                         <label class="block text-sm font-medium text-slate-700">Code</label>
