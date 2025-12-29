@@ -1,9 +1,7 @@
 package com.eduflow.teaching.service;
 
-import com.eduflow.academic.domain.Semester;
 import com.eduflow.academic.domain.Subject;
-import com.eduflow.academic.repo.SemesterRepository;
-import com.eduflow.academic.repo.SubjectRepository;
+import com.eduflow.academic.service.interfaces.SemesterService;
 import com.eduflow.people.repo.TeacherRepository;
 import com.eduflow.teaching.domain.ClassGroup;
 import com.eduflow.teaching.domain.CourseInstance;
@@ -13,102 +11,82 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
-@Transactional // Garantit que toutes les vérifications + sauvegarde sont atomiques
+@Transactional
 public class CourseInstanceService {
 
     private final CourseInstanceRepository courseInstanceRepository;
     private final ClassGroupRepository classGroupRepository;
-    private final SubjectRepository subjectRepository;
-    private final SemesterRepository semesterRepository;
+    private final com.eduflow.academic.repo.SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final SemesterService semesterService; // ✅ global config
+
+    private String norm(String s) {
+        return s == null ? null : s.trim().toUpperCase();
+    }
 
     /**
-     * Ouvre une instance de cours (CourseInstance) pour une classe, une matière, un prof et un semestre donné.
-     * <p>
-     * Règles métier appliquées :
-     * - Toutes les entités référencées doivent exister.
-     * - Le semestre doit appartenir au même niveau (level) que la classe.
-     * - La matière doit être rattachée au semestre indiqué.
-     * - Il ne doit pas exister déjà un cours ouvert pour la même combinaison
-     *   (classGroup + subject + semester + academicYear) → évite les doublons.
-     * - Si academicYear est null, on récupère celui de la ClassGroup.
-     *
-     * @param subjectId     ID de la matière (Subject)
-     * @param classGroupId  ID du groupe de classe
-     * @param teacherId     ID de l'enseignant
-     * @param semesterId    ID du semestre
-     * @param academicYear  Année académique (optionnelle)
-     * @return CourseInstance créée et persistée
+     * Ouvre une instance de cours pour une classe, une matière, un prof et un semestre global (S1/S2).
      */
     public CourseInstance openCourse(String subjectId,
                                      String classGroupId,
                                      String teacherId,
-                                     String semesterId,
+                                     String semesterCode,
                                      Integer academicYear) {
 
-        // 1. Vérification et récupération du Subject
+        // 1) Subject
         Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Matière introuvable avec l'ID : " + subjectId));
+                .orElseThrow(() -> new IllegalArgumentException("Matière introuvable: " + subjectId));
 
-        // 2. Vérification et récupération du ClassGroup
+        // 2) ClassGroup
         ClassGroup classGroup = classGroupRepository.findById(classGroupId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Groupe de classe introuvable avec l'ID : " + classGroupId));
+                .orElseThrow(() -> new IllegalArgumentException("Groupe introuvable: " + classGroupId));
 
-        // 3. Vérification du Teacher
+        // 3) Teacher
         teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Enseignant introuvable avec l'ID : " + teacherId));
+                .orElseThrow(() -> new IllegalArgumentException("Enseignant introuvable: " + teacherId));
 
-        // 4. Vérification et récupération du Semester
-        Semester semester = semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Semestre introuvable avec l'ID : " + semesterId));
-
-        // 5. Règle métier : le semestre doit appartenir au même niveau que la classe
-        if (!semester.getLevelId().equals(classGroup.getLevelId())) {
-            throw new IllegalStateException(
-                    "Le semestre '" + semester.getLabel() +
-                            "' n'appartient pas au niveau de la classe '" + classGroup.getLabel() + "'");
+        // 4) SemesterCode global exists (+ optionnel: check active)
+        String semCode = norm(semesterCode);
+        var sem = semesterService.getSemesterByCode(semCode);
+        if (!sem.isActive()) {
+            throw new IllegalStateException("Le semestre " + semCode + " est désactivé.");
         }
 
-        // 6. Règle métier : la matière doit être rattachée au semestre indiqué
-        if (!subject.getSemesterId().equals(semesterId)) {
+        // 5) Business rules: subject must belong to same level & same semesterCode
+        if (subject.getLevelId() == null || !subject.getLevelId().equals(classGroup.getLevelId())) {
             throw new IllegalStateException(
-                    "La matière '" + subject.getTitle() +
-                            "' n'est pas programmée pour le semestre '" + semester.getLabel() + "'");
+                    "La matière '" + subject.getTitle() + "' n'appartient pas au niveau de la classe '" + classGroup.getLabel() + "'");
         }
 
-        // 7. Année académique par défaut = celle de la classe si non fournie
-        Integer finalAcademicYear = academicYear != null ? academicYear : classGroup.getAcademicYear();
-        if (finalAcademicYear == null) {
+        if (subject.getSemesterCode() == null || !norm(subject.getSemesterCode()).equals(semCode)) {
+            throw new IllegalStateException(
+                    "La matière '" + subject.getTitle() + "' n'est pas programmée pour le semestre '" + semCode + "'");
+        }
+
+        // 6) Academic year default from classGroup
+        Integer finalYear = academicYear != null ? academicYear : classGroup.getAcademicYear();
+        if (finalYear == null) {
             throw new IllegalStateException("Aucune année académique définie pour la classe " + classGroupId);
         }
 
-        // 8. Unicité du cours pour (classGroup + subject + semester + academicYear)
-        Optional<CourseInstance> existing = courseInstanceRepository
-                .findByClassGroupIdAndSemesterIdAndAcademicYear(
-                        classGroupId, semesterId, finalAcademicYear);
+        // 7) Uniqueness (classGroup + subject + semester + year)
+        courseInstanceRepository
+                .findByClassGroupIdAndSubjectIdAndSemesterCodeAndAcademicYear(classGroupId, subjectId, semCode, finalYear)
+                .ifPresent(ci -> {
+                    throw new IllegalStateException("Un cours est déjà ouvert pour cette classe, matière, semestre et année.");
+                });
 
-        if (existing.isPresent()) {
-            throw new IllegalStateException(
-                    "Un cours est déjà ouvert pour cette classe, cette matière, ce semestre et cette année académique.");
-        }
-
-        // 9. Création de l'instance de cours
-        CourseInstance courseInstance = CourseInstance.builder()
+        // 8) Create
+        CourseInstance ci = CourseInstance.builder()
                 .classGroupId(classGroupId)
                 .teacherId(teacherId)
-                .semesterId(semesterId)
-                .academicYear(finalAcademicYear)
+                .subjectId(subjectId)
+                .semesterCode(semCode)
+                .academicYear(finalYear)
                 .build();
 
-        // 10. Persistance
-        return courseInstanceRepository.save(courseInstance);
+        return courseInstanceRepository.save(ci);
     }
 }
