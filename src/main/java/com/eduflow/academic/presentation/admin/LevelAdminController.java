@@ -23,33 +23,17 @@ public class LevelAdminController {
         return "admin/academic/levels/list";
     }
 
-    @GetMapping("/specialities/{specialityId}/levels/new")
-    public String showCreateForm(@PathVariable String specialityId, Model model) {
-        Level level = new Level();
-        level.setSpecialityId(specialityId);
-        model.addAttribute("speciality", specialityService.getSpeciality(specialityId));
-        model.addAttribute("level", level);
-        return "admin/academic/levels/form";
-    }
-
     @PostMapping("/specialities/{specialityId}/levels")
     public String create(@PathVariable String specialityId,
-                         @ModelAttribute Level level) {
+                         @ModelAttribute("level") Level level) {
+        level.setSpecialityId(specialityId);
         levelService.createLevel(specialityId, level);
         return "redirect:/admin/academic/specialities/" + specialityId + "/levels";
     }
 
-    @GetMapping("/levels/{id}/edit")
-    public String showEditForm(@PathVariable String id, Model model) {
-        Level level = levelService.getLevel(id);
-        model.addAttribute("level", level);
-        model.addAttribute("speciality", specialityService.getSpeciality(level.getSpecialityId()));
-        return "admin/academic/levels/form";
-    }
-
     @PostMapping("/levels/{id}")
     public String update(@PathVariable String id,
-                         @ModelAttribute Level level) {
+                         @ModelAttribute("level") Level level) {
         Level updated = levelService.updateLevel(id, level);
         return "redirect:/admin/academic/specialities/" + updated.getSpecialityId() + "/levels";
     }

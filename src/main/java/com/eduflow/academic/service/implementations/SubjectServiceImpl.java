@@ -1,8 +1,9 @@
 package com.eduflow.academic.service.implementations;
 
 import com.eduflow.academic.domain.Subject;
-import com.eduflow.academic.repo.SemesterRepository;
 import com.eduflow.academic.repo.SubjectRepository;
+import com.eduflow.academic.service.interfaces.LevelService;
+import com.eduflow.academic.service.interfaces.SemesterService;
 import com.eduflow.academic.service.interfaces.SubjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,25 +15,41 @@ import java.util.List;
 public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
-    private final SemesterRepository semesterRepository;
+    private final SemesterService semesterService; // config globale
+    private final LevelService levelService;       // pour valider levelId
+
+    private String normalizeCode(String v) {
+        return v == null ? null : v.trim().toUpperCase();
+    }
 
     @Override
-    public Subject createSubject(String semesterId, Subject subject) {
-        semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new IllegalArgumentException("Semester not found: " + semesterId));
+    public Subject createSubject(String levelId, String semesterCode, Subject subject) {
+        // 1) validate level exists
+        levelService.getLevel(levelId); // throw si absent
 
-        subject.setSemesterId(semesterId);
+        // 2) validate semester exists in global config (et éventuellement active)
+        String semCode = normalizeCode(semesterCode);
+        semesterService.getSemesterByCode(semCode); // throw si absent (ou check active dans ton service)
 
-        if (subject.getCode() != null && subjectRepository.existsByCode(subject.getCode())) {
-            throw new IllegalStateException("Subject with code " + subject.getCode() + " already exists");
+        // 3) normalize + assign
+        subject.setLevelId(levelId);
+        subject.setSemesterCode(semCode);
+        subject.setCode(normalizeCode(subject.getCode()));
+
+        // 4) uniqueness within (levelId, semesterCode, code)
+        if (subject.getCode() != null
+                && subjectRepository.existsByLevelIdAndSemesterCodeAndCode(levelId, semCode, subject.getCode())) {
+            throw new IllegalStateException("Subject with code " + subject.getCode()
+                    + " already exists for " + levelId + " / " + semCode);
         }
 
         return subjectRepository.save(subject);
     }
 
     @Override
-    public List<Subject> getSubjectsBySemester(String semesterId) {
-        return subjectRepository.findBySemesterId(semesterId);
+    public List<Subject> getSubjects(String levelId, String semesterCode) {
+        String semCode = normalizeCode(semesterCode);
+        return subjectRepository.findByLevelIdAndSemesterCode(levelId, semCode);
     }
 
     @Override
@@ -42,24 +59,26 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
-    public Subject updateSubject(String id, Subject subject) {
+    public Subject updateSubject(String id, Subject patch) {
         Subject existing = getSubject(id);
 
-        if (subject.getCode() != null
-                && !subject.getCode().equals(existing.getCode())
-                && subjectRepository.existsByCode(subject.getCode())) {
-            throw new IllegalStateException("Subject with code " + subject.getCode() + " already exists");
+        // On conserve le scope (levelId + semesterCode) sauf si tu veux permettre move
+        String levelId = existing.getLevelId();
+        String semCode = existing.getSemesterCode();
+
+        String newCode = normalizeCode(patch.getCode());
+        if (newCode != null && !newCode.equals(existing.getCode())) {
+            if (subjectRepository.existsByLevelIdAndSemesterCodeAndCode(levelId, semCode, newCode)) {
+                throw new IllegalStateException("Subject with code " + newCode + " already exists for this semester");
+            }
+            existing.setCode(newCode);
         }
 
-        if (subject.getSemesterId() == null) {
-            subject.setSemesterId(existing.getSemesterId());
-        } else if (!subject.getSemesterId().equals(existing.getSemesterId())) {
-            semesterRepository.findById(subject.getSemesterId())
-                    .orElseThrow(() -> new IllegalArgumentException("New semester not found: " + subject.getSemesterId()));
-        }
+        if (patch.getTitle() != null) existing.setTitle(patch.getTitle().trim());
+        if (patch.getCredits() != null) existing.setCredits(patch.getCredits());
+        if (patch.getCoefficient() != null) existing.setCoefficient(patch.getCoefficient());
 
-        subject.setId(existing.getId());
-        return subjectRepository.save(subject);
+        return subjectRepository.save(existing);
     }
 
     @Override

@@ -8,11 +8,11 @@ import java.util.Optional;
 
 public interface SubjectRepository extends MongoRepository<Subject, String> {
 
-    // toutes les matières d’un semestre
-    List<Subject> findBySemesterId(String semesterId);
+    List<Subject> findByLevelIdAndSemesterCode(String levelId, String semesterCode);
 
-    // pour vérifier les doublons de code
-    Optional<Subject> findByCode(String code);
+    Optional<Subject> findByLevelIdAndSemesterCodeAndCode(String levelId, String semesterCode, String code);
 
-    boolean existsByCode(String code);
+    boolean existsByLevelIdAndSemesterCodeAndCode(String levelId, String semesterCode, String code);
+
+    String semesterCode(String semesterCode);
 }

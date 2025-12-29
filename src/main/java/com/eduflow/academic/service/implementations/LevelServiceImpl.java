@@ -3,6 +3,7 @@ import com.eduflow.academic.domain.Level;
 import com.eduflow.academic.repo.LevelRepository;
 import com.eduflow.academic.repo.SemesterRepository;
 import com.eduflow.academic.repo.SpecialityRepository;
+import com.eduflow.academic.repo.SubjectRepository;
 import com.eduflow.academic.service.interfaces.LevelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class LevelServiceImpl implements LevelService {
     private final LevelRepository levelRepository;
     private final SpecialityRepository specialityRepository;
     private final SemesterRepository semesterRepository;
+    private final SubjectRepository subjectRepository;
 
     @Override
     public Level createLevel(String specialityId, Level level) {
@@ -56,9 +58,6 @@ public class LevelServiceImpl implements LevelService {
     public void deleteLevel(String id) {
         Level level = getLevel(id);
 
-        if (!semesterRepository.findByLevelId(id).isEmpty()) {
-            throw new IllegalStateException("Cannot delete level with existing semesters");
-        }
 
         levelRepository.delete(level);
     }

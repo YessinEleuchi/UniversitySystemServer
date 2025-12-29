@@ -11,16 +11,4 @@ import java.util.List;
 @RequestMapping("/api/academic")
 @RequiredArgsConstructor
 public class SubjectRestController {
-
-    private final SubjectService subjectService;
-
-    @GetMapping("/semesters/{semesterId}/subjects")
-    public List<Subject> getBySemester(@PathVariable String semesterId) {
-        return subjectService.getSubjectsBySemester(semesterId);
-    }
-
-    @GetMapping("/subjects/{id}")
-    public Subject getById(@PathVariable String id) {
-        return subjectService.getSubject(id);
-    }
 }
