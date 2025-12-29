@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SemesterRepository extends MongoRepository<Semester, String> {
+    Optional<Semester> findByCode(String code);
 
-    // tous les semestres d’un niveau
-    List<Semester> findByLevelId(String levelId);
+    boolean existsByCode(String code);
 
-    // ex: code S1 pour tel level
-    Optional<Semester> findByLevelIdAndCode(String levelId, String code);
+    List<Semester> findAllByOrderByOrderAsc();
+
+
+    List<Semester> findByActiveTrueOrderByOrderAsc(); // utile partout
 }

@@ -1,9 +1,7 @@
 package com.eduflow.academic.service.implementations;
 
 import com.eduflow.academic.domain.Semester;
-import com.eduflow.academic.repo.LevelRepository;
 import com.eduflow.academic.repo.SemesterRepository;
-import com.eduflow.academic.repo.SubjectRepository;
 import com.eduflow.academic.service.interfaces.SemesterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,52 +13,74 @@ import java.util.List;
 public class SemesterServiceImpl implements SemesterService {
 
     private final SemesterRepository semesterRepository;
-    private final LevelRepository levelRepository;
-    private final SubjectRepository subjectRepository;
+
+    private String normalizeCode(String code) {
+        if (code == null) throw new IllegalArgumentException("Code semestre requis");
+        String c = code.trim().toUpperCase();
+        if (c.isEmpty()) throw new IllegalArgumentException("Code semestre requis");
+        return c;
+    }
+
+    private void validate(Semester s) {
+        if (s.getLabel() == null || s.getLabel().trim().isEmpty()) {
+            throw new IllegalArgumentException("Label requis");
+        }
+        if (s.getOrder() <= 0) {
+            throw new IllegalArgumentException("Order doit être >= 1");
+        }
+        s.setCode(normalizeCode(s.getCode()));
+        s.setLabel(s.getLabel().trim());
+    }
 
     @Override
-    public Semester createSemester(String levelId, Semester semester) {
-        levelRepository.findById(levelId)
-                .orElseThrow(() -> new IllegalArgumentException("Level not found: " + levelId));
+    public List<Semester> getAllSemesters() {
+        return semesterRepository.findAllByOrderByOrderAsc();
+    }
 
-        semester.setLevelId(levelId);
+    @Override
+    public List<Semester> getActiveSemesters() {
+        return semesterRepository.findByActiveTrueOrderByOrderAsc();
+    }
+
+    @Override
+    public Semester addSemester(Semester semester) {
+        validate(semester);
+
+        if (semesterRepository.existsByCode(semester.getCode())) {
+            throw new IllegalArgumentException("Code déjà utilisé : " + semester.getCode());
+        }
         return semesterRepository.save(semester);
     }
 
     @Override
-    public List<Semester> getSemestersByLevel(String levelId) {
-        return semesterRepository.findByLevelId(levelId);
-    }
+    public Semester updateSemester(String id, Semester updated) {
+        Semester existing = getSemesterById(id);
+        validate(updated);
 
-    @Override
-    public Semester getSemester(String id) {
-        return semesterRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Semester not found: " + id));
-    }
-
-    @Override
-    public Semester updateSemester(String id, Semester semester) {
-        Semester existing = getSemester(id);
-
-        if (semester.getLevelId() == null) {
-            semester.setLevelId(existing.getLevelId());
-        } else if (!semester.getLevelId().equals(existing.getLevelId())) {
-            levelRepository.findById(semester.getLevelId())
-                    .orElseThrow(() -> new IllegalArgumentException("New level not found: " + semester.getLevelId()));
+        if (!existing.getCode().equals(updated.getCode())
+                && semesterRepository.existsByCode(updated.getCode())) {
+            throw new IllegalArgumentException("Code déjà utilisé : " + updated.getCode());
         }
 
-        semester.setId(existing.getId());
-        return semesterRepository.save(semester);
+        updated.setId(id);
+        return semesterRepository.save(updated);
+    }
+
+    @Override
+    public Semester getSemesterById(String id) {
+        return semesterRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Semestre non trouvé : " + id));
+    }
+
+    @Override
+    public Semester getSemesterByCode(String code) {
+        String c = normalizeCode(code);
+        return semesterRepository.findByCode(c)
+                .orElseThrow(() -> new IllegalArgumentException("Semestre non trouvé : " + c));
     }
 
     @Override
     public void deleteSemester(String id) {
-        Semester semester = getSemester(id);
-
-        if (!subjectRepository.findBySemesterId(id).isEmpty()) {
-            throw new IllegalStateException("Cannot delete semester with existing subjects");
-        }
-
-        semesterRepository.delete(semester);
+        semesterRepository.deleteById(id);
     }
 }

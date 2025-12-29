@@ -2,7 +2,6 @@ package com.eduflow.academic.domain;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("semesters")
@@ -14,13 +13,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Semester {
 
     @Id
-    private String id;
+    private String id;         // généré par Mongo
 
-    @Indexed
-    private String levelId;     // ref -> Level
-
-    @Indexed
-    private String code;        // S1, S2...
-
-    private String label;       // Semestre 1, Semestre 2...
+    private String code;       // "S1", "S2" → unique
+    private String label;      // "Semestre 1"
+    private int order;         // 1, 2, ...
+    private boolean active = true;
 }

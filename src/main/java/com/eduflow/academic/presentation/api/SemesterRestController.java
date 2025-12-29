@@ -12,17 +12,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SemesterRestController {
 
-    private final SemesterService semesterService;
-
-    @GetMapping("/levels/{levelId}/semesters")
-    public List<Semester> getByLevel(@PathVariable String levelId) {
-        return semesterService.getSemestersByLevel(levelId);
-    }
-
-    @GetMapping("/semesters/{id}")
-    public Semester getById(@PathVariable String id) {
-        return semesterService.getSemester(id);
-    }
 
 
 

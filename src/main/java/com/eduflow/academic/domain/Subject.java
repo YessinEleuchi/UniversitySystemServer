@@ -19,11 +19,12 @@ public class Subject {
     @Indexed(unique = true)
     private String code;         // WEB201, ALG303...
 
-    private String title;        // Développement Web Avancé
+    private String title;
+    @Indexed
+    private String levelId;
 
     @Indexed
-    private String semesterId;   // ref -> Semester
-
+    private String semesterCode;
     private Integer credits;     // optionnel: 3, 6...
 
     private Double coefficient; // si vous utilisez coef
