@@ -17,12 +17,19 @@ public class AdminStudentController {
     private final ClassGroupRepository classGroupRepository;
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("students", studentService.getAllStudents());
+    public String list(@RequestParam(required = false) String classGroupId, Model model) {
+        var students = (classGroupId == null || classGroupId.isBlank())
+                ? studentService.getAllStudents()
+                : studentService.getStudentsByClassGroup(classGroupId);
+
+        model.addAttribute("students", students);
         model.addAttribute("student", new Student());
         model.addAttribute("classGroups", classGroupRepository.findAll());
+        model.addAttribute("selectedClassGroupId", classGroupId);
+
         return "admin/users/students/list";
     }
+
 
     @PostMapping
     public String create(@ModelAttribute Student student, Model model) {
@@ -44,7 +51,7 @@ public class AdminStudentController {
     public String view(@PathVariable String id, Model model) {
         model.addAttribute("student", studentService.getStudent(id));
         model.addAttribute("classGroups", classGroupRepository.findAll());
-        return "admin/users/students/view";
+        return "admin/users/students";
     }
 
     // 🔄 ASSIGN CLASS
@@ -52,6 +59,6 @@ public class AdminStudentController {
     public String assignClass(@PathVariable String id,
                               @RequestParam String classGroupId) {
         studentService.assignStudentToClass(id, classGroupId);
-        return "redirect:/admin/students/" + id;
+        return "redirect:/admin/students";
     }
 }

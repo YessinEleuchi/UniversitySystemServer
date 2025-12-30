@@ -42,6 +42,8 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
+
+
     public Student getStudent(String id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + id));
