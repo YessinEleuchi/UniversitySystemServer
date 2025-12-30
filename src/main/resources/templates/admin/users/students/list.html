@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: layout(content=~{::section}, title='Students')}">
 
-<section>
+<section th:fragment="section">
 
     <!-- Header -->
     <div class="flex items-center justify-between">
@@ -66,6 +66,17 @@
             </tr>
             </tbody>
         </table>
+        <form th:action="@{/admin/students}" method="get" class="mt-4 flex gap-2">
+            <select name="classGroupId" class="rounded-xl border px-3 py-2">
+                <option value="">-- All groups --</option>
+                <option th:each="cg : ${classGroups}"
+                        th:value="${cg.id}"
+                        th:text="${cg.label != null ? cg.label : cg.code}"
+                        th:selected="${cg.id == selectedClassGroupId}">
+                </option>
+            </select>
+            <button class="rounded-xl bg-slate-900 px-4 py-2 text-white">Filter</button>
+        </form>
     </div>
 
     <!-- ========================= -->
@@ -131,7 +142,7 @@
                             <option value="">-- none --</option>
                             <option th:each="cg : ${classGroups}"
                                     th:value="${cg.id}"
-                                    th:text="${cg.name != null ? cg.name : cg.id}">
+                                    th:text="${cg.label != null ? cg.label : cg.id}">
                             </option>
                         </select>
                     </div>
@@ -192,7 +203,7 @@
                                 <option value="">-- none --</option>
                                 <option th:each="cg : ${classGroups}"
                                         th:value="${cg.id}"
-                                        th:text="${cg.name != null ? cg.name : cg.id}">
+                                        th:text="${cg.label != null ? cg.label : cg.id}">
                                 </option>
                             </select>
 
