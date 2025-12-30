@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::main}, 'Sessions')}">
+
+<main th:fragment="main">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4 text-sm">
+        <ol class="flex flex-wrap items-center gap-x-2 text-slate-600">
+            <li><a th:href="@{/admin}" class="hover:text-slate-900 hover:underline">Admin</a></li>
+            <li class="text-slate-400">/</li>
+            <li class="font-semibold text-slate-900">Sessions</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+                <i class="bi bi-calendar2-week text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-semibold leading-tight">Sessions</h1>
+                <p class="text-sm text-slate-500">Gestion des séances (création + édition + suppression) sur une seule page.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${error}" class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <div class="font-semibold">Action refusée</div>
+        <div th:text="${error}"></div>
+    </div>
+
+    <div th:if="${success}" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div class="font-semibold">OK</div>
+        <div th:text="${success}"></div>
+    </div>
+
+    <!-- CREATE -->
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-900 mb-3">Créer une séance</h2>
+
+        <form th:action="@{/admin/sessions}" method="post" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <!-- Course Instance -->
+            <div class="md:col-span-1">
+                <label class="text-xs text-slate-500">Cours ouvert *</label>
+                <select name="courseInstanceId" required
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white">
+                    <option value="">-- sélectionner --</option>
+                    <option th:each="ci : ${courseInstances}"
+                            th:value="${ci.id}"
+                            th:text="${courseInstanceLabel[ci.id]}"
+                            th:selected="${form_courseInstanceId != null and ci.id == form_courseInstanceId}">
+                    </option>
+                </select>
+                <p class="mt-1 text-xs text-slate-500">Sélectionne le cours (matière + classe + semestre + année).</p>
+            </div>
+
+            <!-- Room -->
+            <div class="md:col-span-1">
+                <label class="text-xs text-slate-500">Salle *</label>
+                <select name="roomId" required
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white">
+                    <option value="">-- sélectionner --</option>
+                    <option th:each="r : ${rooms}"
+                            th:value="${r.id}"
+                            th:text="${roomLabel[r.id]}"
+                            th:selected="${form_roomId != null and r.id == form_roomId}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Type -->
+            <div class="md:col-span-1">
+                <label class="text-xs text-slate-500">Type *</label>
+                <select name="type" required
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white">
+                    <option value="">--</option>
+                    <option value="CM" th:selected="${form_type == 'CM'}">CM</option>
+                    <option value="TD" th:selected="${form_type == 'TD'}">TD</option>
+                    <option value="TP" th:selected="${form_type == 'TP'}">TP</option>
+                    <option value="EXAM" th:selected="${form_type == 'EXAM'}">EXAM</option>
+                    <option value="PROJECT" th:selected="${form_type == 'PROJECT'}">PROJECT</option>
+                </select>
+            </div>
+
+            <!-- Start -->
+            <div class="md:col-span-1">
+                <label class="text-xs text-slate-500">Début *</label>
+                <input type="datetime-local" name="startLocal" required
+                       th:value="${form_startLocal}"
+                       class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" />
+            </div>
+
+            <!-- End -->
+            <div class="md:col-span-1">
+                <label class="text-xs text-slate-500">Fin *</label>
+                <input type="datetime-local" name="endLocal" required
+                       th:value="${form_endLocal}"
+                       class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" />
+            </div>
+
+            <div class="md:col-span-3 flex justify-end">
+                <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                    Create
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- LIST -->
+    <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-4 py-3 font-semibold">Liste des séances</div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-600">
+                <tr>
+                    <th class="px-4 py-3">Cours</th>
+                    <th class="px-4 py-3">Classe</th>
+                    <th class="px-4 py-3">Enseignant</th>
+                    <th class="px-4 py-3">Salle</th>
+                    <th class="px-4 py-3">Type</th>
+                    <th class="px-4 py-3">Début</th>
+                    <th class="px-4 py-3">Fin</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="s : ${sessions}" class="border-t hover:bg-slate-50">
+                    <!-- Course -->
+                    <td class="px-4 py-3 text-slate-700">
+                        <div class="font-medium text-slate-900"
+                             th:text="${courseInstanceLabel[s.courseInstanceId] != null ? courseInstanceLabel[s.courseInstanceId] : s.courseInstanceId}">
+                        </div>
+                        <div class="text-xs text-slate-500" th:text="${s.courseInstanceId}"></div>
+                    </td>
+
+                    <!-- ClassGroup -->
+                    <td class="px-4 py-3 text-slate-700"
+                        th:text="${classGroupLabel[s.classGroupId] != null ? classGroupLabel[s.classGroupId] : s.classGroupId}">
+                    </td>
+
+                    <!-- Teacher -->
+                    <td class="px-4 py-3 text-slate-700"
+                        th:text="${teacherLabel[s.teacherId] != null ? teacherLabel[s.teacherId] : s.teacherId}">
+                    </td>
+
+                    <!-- Room -->
+                    <td class="px-4 py-3 text-slate-700"
+                        th:text="${roomLabel[s.roomId] != null ? roomLabel[s.roomId] : s.roomId}">
+                    </td>
+
+                    <!-- Type -->
+                    <td class="px-4 py-3 font-medium text-slate-900" th:text="${s.type}"></td>
+
+                    <!-- Start / End -->
+                    <td class="px-4 py-3 text-slate-700" th:text="${s.startTime}"></td>
+                    <td class="px-4 py-3 text-slate-700" th:text="${s.endTime}"></td>
+
+                    <td class="px-4 py-3">
+                        <div class="flex justify-end gap-2">
+
+                            <!-- EDIT -->
+                            <button type="button"
+                                    class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-100"
+                                    th:attr="data-id=${s.id},
+                                             data-room=${s.roomId},
+                                             data-type=${s.type},
+                                             data-start=${s.startTime},
+                                             data-end=${s.endTime}"
+                                    onclick="openEditSessionModal(this)">
+                                Edit
+                            </button>
+
+                            <!-- DELETE -->
+                            <form th:action="@{'/admin/sessions/' + ${s.id} + '/delete'}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                                        onclick="return confirm('Supprimer cette séance ?')">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(sessions)}">
+                    <td colspan="8" class="px-4 py-6 text-center text-slate-500">Aucune séance.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div id="editSessionModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/50" onclick="closeEditSessionModal()"></div>
+
+        <div class="relative mx-auto mt-16 w-[92%] max-w-lg rounded-xl bg-white shadow-lg">
+            <form id="editSessionForm" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="flex items-center justify-between border-b px-5 py-4">
+                    <h3 class="text-base font-semibold text-slate-900">Modifier la séance</h3>
+                    <button type="button" class="rounded-md p-2 hover:bg-slate-100"
+                            onclick="closeEditSessionModal()" aria-label="Close">✕</button>
+                </div>
+
+                <div class="p-5 grid grid-cols-1 gap-3">
+
+                    <div>
+                        <label class="text-xs text-slate-500">Salle *</label>
+                        <select id="es_roomId" name="roomId" required
+                                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white">
+                            <option value="">-- sélectionner --</option>
+                            <option th:each="r : ${rooms}"
+                                    th:value="${r.id}"
+                                    th:text="${roomLabel[r.id]}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500">Type *</label>
+                        <select id="es_type" name="type" required
+                                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white">
+                            <option value="CM">CM</option>
+                            <option value="TD">TD</option>
+                            <option value="TP">TP</option>
+                            <option value="EXAM">EXAM</option>
+                            <option value="PROJECT">PROJECT</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-500">Début *</label>
+                            <input id="es_startLocal" type="datetime-local" name="startLocal" required
+                                   class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" />
+                        </div>
+
+                        <div>
+                            <label class="text-xs text-slate-500">Fin *</label>
+                            <input id="es_endLocal" type="datetime-local" name="endLocal" required
+                                   class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 border-t px-5 py-4">
+                    <button type="button" class="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50"
+                            onclick="closeEditSessionModal()">Cancel</button>
+                    <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditSessionModal(btn) {
+            const id = btn.dataset.id;
+            document.getElementById('editSessionForm').action = `/admin/sessions/${id}`;
+
+            // room/type
+            document.getElementById('es_roomId').value = btn.dataset.room || '';
+            document.getElementById('es_type').value = (btn.dataset.type || '').toUpperCase();
+
+            // start/end: Instant -> datetime-local (YYYY-MM-DDTHH:mm)
+            document.getElementById('es_startLocal').value = toLocalInput(btn.dataset.start);
+            document.getElementById('es_endLocal').value = toLocalInput(btn.dataset.end);
+
+            document.getElementById('editSessionModal').classList.remove('hidden');
+        }
+
+        function closeEditSessionModal() {
+            document.getElementById('editSessionModal').classList.add('hidden');
+        }
+
+        function toLocalInput(isoInstant) {
+            if (!isoInstant) return '';
+            const d = new Date(isoInstant); // parse Instant ISO
+            const pad = (n) => String(n).padStart(2, '0');
+            // NOTE: using local time zone of browser (ok for Africa/Tunis usage)
+            const yyyy = d.getFullYear();
+            const mm = pad(d.getMonth() + 1);
+            const dd = pad(d.getDate());
+            const hh = pad(d.getHours());
+            const min = pad(d.getMinutes());
+            return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeEditSessionModal();
+        });
+    </script>
+
+</main>
+</html>
