@@ -20,7 +20,7 @@ public class CourseInstanceService {
     private final ClassGroupRepository classGroupRepository;
     private final com.eduflow.academic.repo.SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
-    private final SemesterService semesterService; // ✅ global config
+    private final SemesterService semesterService;
 
     private String norm(String s) {
         return s == null ? null : s.trim().toUpperCase();
@@ -47,19 +47,27 @@ public class CourseInstanceService {
         teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new IllegalArgumentException("Enseignant introuvable: " + teacherId));
 
-        // 4) SemesterCode global exists (+ optionnel: check active)
-        String semCode = norm(semesterCode);
+        // 4) SemesterCode : auto depuis subject si non fourni
+        String semCode = (semesterCode == null || semesterCode.isBlank())
+                ? norm(subject.getSemesterCode())
+                : norm(semesterCode);
+
+        if (semCode == null || semCode.isBlank()) {
+            throw new IllegalStateException("Impossible d'ouvrir le cours: la matière n'a pas de semesterCode.");
+        }
+
         var sem = semesterService.getSemesterByCode(semCode);
         if (!sem.isActive()) {
             throw new IllegalStateException("Le semestre " + semCode + " est désactivé.");
         }
 
-        // 5) Business rules: subject must belong to same level & same semesterCode
+        // 5) Business rules: subject must belong to same level & semesterCode
         if (subject.getLevelId() == null || !subject.getLevelId().equals(classGroup.getLevelId())) {
             throw new IllegalStateException(
                     "La matière '" + subject.getTitle() + "' n'appartient pas au niveau de la classe '" + classGroup.getLabel() + "'");
         }
 
+        // Ici tu compares le semestre du subject avec semCode (qui vient soit du subject soit du param)
         if (subject.getSemesterCode() == null || !norm(subject.getSemesterCode()).equals(semCode)) {
             throw new IllegalStateException(
                     "La matière '" + subject.getTitle() + "' n'est pas programmée pour le semestre '" + semCode + "'");
