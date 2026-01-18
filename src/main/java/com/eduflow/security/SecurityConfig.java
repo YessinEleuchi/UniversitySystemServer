@@ -38,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                // ✅ Pour SSR (Thymeleaf), CSRF ON c'est mieux. On le garde.
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("MANAGER", "SUPER_ADMIN")
