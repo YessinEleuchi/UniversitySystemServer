@@ -1,4 +1,4 @@
-package com.eduflow.academic.presentation.admin;
+package com.eduflow.academic.presentation.controllers;
 
 import com.eduflow.academic.domain.Subject;
 import com.eduflow.academic.service.interfaces.LevelService;

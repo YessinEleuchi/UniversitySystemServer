@@ -1,4 +1,4 @@
-package com.eduflow.academic.presentation.admin;
+package com.eduflow.academic.presentation.controllers;
 
 import com.eduflow.academic.repo.CycleRepository;
 import com.eduflow.academic.repo.SpecialityRepository;
