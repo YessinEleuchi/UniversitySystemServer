@@ -1,4 +1,4 @@
-package com.eduflow.people.presentation;
+package com.eduflow.people.presentation.controllers;
 
 import com.eduflow.people.domain.Student;
 import com.eduflow.people.service.StudentService;

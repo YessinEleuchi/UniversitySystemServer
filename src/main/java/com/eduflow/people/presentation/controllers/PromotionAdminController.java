@@ -1,4 +1,4 @@
-package com.eduflow.people.presentation;
+package com.eduflow.people.presentation.controllers;
 
 import com.eduflow.academic.repo.LevelRepository;
 import com.eduflow.teaching.repo.ClassGroupRepository;
