@@ -19,15 +19,15 @@ public class Evaluation {
     private String id;
 
     @Indexed
-    private String courseInstanceId;   // ref -> teaching.course_instances
+    private String courseInstanceId;
 
-    private String title;              // DS1, TP Réseau, Examen final...
+    private String title;
 
-    private AssessmentType type;       // DS, TP, EXAM...
+    private AssessmentType type;
 
-    private Double maxScore;           // ex: 20.0
+    private Double maxScore;
 
-    private Double weight;             // ex: 0.3 pour 30% de la note finale
+    private Double weight;
 
-    private Instant evaluationDate;    // quand l’éval a lieu
+    private Instant evaluationDate;
 }

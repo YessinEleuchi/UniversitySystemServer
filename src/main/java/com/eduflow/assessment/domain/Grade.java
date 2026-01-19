@@ -12,23 +12,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@CompoundIndex(
-        name = "student_evaluation_unique",
-        def = "{'studentId':1,'evaluationId':1}",
-        unique = true
-)
+@CompoundIndex(name = "student_evaluation_unique", def = "{'studentId':1,'evaluationId':1}", unique = true)
 public class Grade {
 
     @Id
     private String id;
 
     @Indexed
-    private String evaluationId;   // ref -> assessments.evaluations
+    private String evaluationId;
 
     @Indexed
-    private String enrollmentId;   // lien direct vers Enrollment
+    private String studentId;
 
-    private Double score;          // ex: 14.5
+    private Double score;
 
-    private String remark;         // optionnel: “absent”, “rendu en retard”…
+    private String remark;
 }
