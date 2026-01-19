@@ -1,4 +1,4 @@
-package com.eduflow.security.presentation;
+package com.eduflow.security.presentation.Controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
