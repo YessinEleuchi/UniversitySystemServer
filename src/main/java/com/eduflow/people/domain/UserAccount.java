@@ -22,9 +22,9 @@ public class UserAccount {
     @Builder.Default
     private Set<Role> roles = Set.of();
 
-    // nullable: admin/manager n'est lié à aucune personne
-    private String personId;        // Student.id ou Teacher.id
-    private PersonType personType;  // STUDENT/TEACHER (null si account staff/admin)
+
+    private String personId;
+    private PersonType personType;
 
     @Builder.Default private boolean enabled = true;
     @Builder.Default private boolean accountNonLocked = true;
