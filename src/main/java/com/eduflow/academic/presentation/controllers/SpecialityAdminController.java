@@ -1,5 +1,6 @@
 package com.eduflow.academic.presentation.controllers;
 
+import com.eduflow.academic.domain.Level;
 import com.eduflow.academic.domain.Speciality;
 import com.eduflow.academic.service.interfaces.CycleService;
 import com.eduflow.academic.service.interfaces.SpecialityService;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/academic")
@@ -23,6 +25,7 @@ public class SpecialityAdminController {
         model.addAttribute("specialities", specialityService.getSpecialitiesByCycle(cycleId));
         return "admin/academic/specialities/list";
     }
+
 
     @GetMapping("/cycles/{cycleId}/specialities/new")
     public String showCreateForm(@PathVariable String cycleId, Model model) {
@@ -49,11 +52,12 @@ public class SpecialityAdminController {
     }
 
     @PostMapping("/specialities/{id}")
-    public String update(@PathVariable String id,
-                         @ModelAttribute Speciality speciality) {
+    public String update(@PathVariable String id, @ModelAttribute Speciality speciality) {
         Speciality updated = specialityService.updateSpeciality(id, speciality);
         return "redirect:/admin/academic/cycles/" + updated.getCycleId() + "/specialities";
     }
+
+
 
     @PostMapping("/specialities/{id}/delete")
     public String delete(@PathVariable String id) {
